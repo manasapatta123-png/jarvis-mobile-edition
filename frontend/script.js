@@ -1,30 +1,29 @@
-// 3. TOOLS (THE HANDS)
+// ===== 3. TOOLS (THE HANDS) =====
 
-// Main tool handler
 async function handleTools(text) {
     const t = text.toLowerCase().trim();
 
     // 1. TIME
     if (/\btime\b/.test(t) || t.includes("current time")) {
-        return "The time is " + new Date().toLocaleTimeString() + ", Boss.";
+        return `The time is ${new Date().toLocaleTimeString()}, Boss.`;
     }
 
     // 2. WEATHER
     if (t.includes("weather")) {
-        return await new Promise((resolve) => {
+        return new Promise((resolve) => {
             if (!navigator.geolocation) {
-                resolve("Location is not supported on this browser, Boss.");
+                resolve("Location is not supported, Boss.");
                 return;
             }
 
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     try {
-                        const latitude = position.coords.latitude;
-                        const longitude = position.coords.longitude;
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
 
                         const url =
-                            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m`;
+                            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`;
 
                         const response = await fetch(url);
 
@@ -33,18 +32,22 @@ async function handleTools(text) {
                         }
 
                         const data = await response.json();
-                        const temperature = data.current.temperature_2m;
+                        const temperature =
+                            data.current.temperature_2m;
 
                         resolve(
-                            `The current temperature is ${temperature} degrees Celsius, Boss.`
+                            `It is ${temperature} degrees Celsius now, Boss.`
                         );
                     } catch (error) {
                         resolve("Weather service error, Boss.");
                     }
                 },
                 () => {
-                    resolve("Please allow location permission to check the weather, Boss.");
-                }
+                    resolve(
+                        "I need location permission to check the weather, Boss."
+                    );
+                },
+                { timeout: 10000 }
             );
         });
     }
@@ -69,24 +72,27 @@ async function handleTools(text) {
         const duration = amount * factor;
 
         setTimeout(() => {
+            const message =
+                `Your ${amount} ${unit} timer is complete, Boss.`;
+
             if (typeof speak === "function") {
-                speak(`Your ${amount} ${unit} timer is complete, Boss.`);
+                speak(message);
             } else {
-                alert(`Your ${amount} ${unit} timer is complete, Boss.`);
+                alert(message);
             }
         }, duration);
 
         return `Timer set for ${amount} ${unit}, Boss.`;
     }
 
-    // 4. TRANSLATE ENGLISH TO TELUGU
+    // 4. ENGLISH TO TELUGU TRANSLATION
     if (t.startsWith("translate")) {
         const query = text
             .replace(/^translate\s+(this\s+)?/i, "")
             .trim();
 
         if (!query) {
-            return "Please tell me what you want to translate, Boss.";
+            return "Please tell me what to translate, Boss.";
         }
 
         try {
@@ -106,7 +112,7 @@ async function handleTools(text) {
             return "In Telugu: " +
                 data.responseData.translatedText;
         } catch (error) {
-            return "Translation service error, Boss.";
+            return "Translation error, Boss.";
         }
     }
 
@@ -131,6 +137,6 @@ async function handleTools(text) {
         return "Opening YouTube, Boss.";
     }
 
-    // No matching tool
+    // No tool matched — let Gemini handle the message
     return null;
 }
