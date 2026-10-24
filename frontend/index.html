@@ -1,135 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#000000">
-    <meta name="description" content="J.A.R.V.I.S Personal AI Assistant">
-
-    <title>J.A.R.V.I.S | Personal AI Assistant</title>
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#030914">
+  <title>J.A.R.V.I.S | AI Assistant</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <!-- HEADER -->
-    <header>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">J</div>
+      <div>
         <h1>J.A.R.V.I.S</h1>
-        <p>PERSONAL AI ASSISTANT</p>
-    </header>
+        <p>MOBILE INTELLIGENCE SYSTEM</p>
+      </div>
+    </div>
 
-    <main>
+    <div class="online">
+      <span class="dot"></span>
+      ONLINE
+    </div>
+  </header>
 
-        <!-- ANIMATED CORE -->
-        <section class="core-section">
-            <div class="core">
-                <div class="ring r1"></div>
-                <div class="ring r2"></div>
-                <div class="center"></div>
-            </div>
+  <main>
 
-            <p class="core-text">SYSTEM READY</p>
-        </section>
+    <section class="hero">
+      <div class="core" id="core">
+        <div class="orbit orbit-one"></div>
+        <div class="orbit orbit-two"></div>
+        <div class="orbit orbit-three"></div>
+        <div class="core-center">J</div>
+      </div>
 
-        <!-- SYSTEM DIAGNOSTICS -->
-        <section class="status">
-            <h2>SYSTEM DIAGNOSTICS</h2>
+      <h2>JUST A RATHER VERY INTELLIGENT SYSTEM</h2>
+      <p id="status">SYSTEM INITIALIZING...</p>
+      <div class="equalizer">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </section>
 
-            <div class="row">
-                <span>AI ENGINE</span>
-                <b id="aiStatus" class="off">● CHECKING</b>
-            </div>
+    <section class="system-info">
+      <div class="info-box">
+        <span>AI CORE</span>
+        <strong id="aiStatus">READY</strong>
+      </div>
 
-            <div class="row">
-                <span>CONNECTION</span>
-                <b id="connectionStatus" class="off">● CHECKING</b>
-            </div>
+      <div class="info-box">
+        <span>VOICE</span>
+        <strong id="voiceStatus">STANDBY</strong>
+      </div>
 
-            <div class="row">
-                <span>VOICE INTERFACE</span>
-                <b id="voiceStatus" class="off">● READY</b>
-            </div>
+      <div class="info-box">
+        <span>MEMORY</span>
+        <strong>ACTIVE</strong>
+      </div>
+    </section>
 
-            <div class="row">
-                <span>LONG-TERM MEMORY</span>
-                <b id="memoryStatus" class="off">● LOCAL</b>
-            </div>
-        </section>
+    <section class="tools">
+      <button data-command="What time is it?">◷ TIME</button>
+      <button data-command="What is today's date?">▦ DATE</button>
+      <button data-command="Open Google">⌕ GOOGLE</button>
+      <button data-command="Open YouTube">▷ YOUTUBE</button>
+      <button data-command="Show my notes">▤ NOTES</button>
+      <button data-command="Help">? HELP</button>
+    </section>
 
-        <!-- CHAT TERMINAL -->
-        <section class="assistant">
-            <h2>ASSISTANT TERMINAL</h2>
+    <section class="chat-panel">
+      <div class="panel-title">
+        <span>COMMUNICATION TERMINAL</span>
+        <button id="clearChat" class="small-button">CLEAR</button>
+      </div>
 
-            <div
-                class="chat"
-                id="chat"
-                role="log"
-                aria-live="polite"
-                aria-relevant="additions"
-            >
-                <div class="msg ai">
-                    J.A.R.V.I.S: Hello, Boss! System initialized. How can I help you?
-                </div>
-            </div>
+      <div id="chat" class="chat">
+        <div class="message jarvis">
+          <b>J.A.R.V.I.S</b>
+          <p>Systems online, Boss. Awaiting your command.</p>
+        </div>
+      </div>
 
-            <!-- COMMAND INPUT -->
-            <form class="input-area" id="chatForm">
+      <form id="chatForm">
+        <input
+          id="message"
+          type="text"
+          placeholder="Enter command, Boss..."
+          autocomplete="off"
+          required
+        >
+        <button type="button" id="mic" aria-label="Voice input">🎙️</button>
+        <button type="submit" id="send" aria-label="Send">➤</button>
+      </form>
 
-                <input
-                    type="text"
-                    id="msg"
-                    placeholder="Enter a command for J.A.R.V.I.S..."
-                    autocomplete="off"
-                    aria-label="Enter your command"
-                >
+      <button id="stopVoice" class="stop-button">■ STOP VOICE</button>
+    </section>
 
-                <button
-                    id="send"
-                    type="submit"
-                >EXECUTE</button>
+    <section class="settings">
+      <h3>AI CONFIGURATION</h3>
+      <label for="apiKey">Gemini API key — personal testing only</label>
+      <input
+        type="password"
+        id="apiKey"
+        placeholder="Enter API key"
+        autocomplete="off"
+      >
+      <button id="saveKey">SAVE KEY ON THIS DEVICE</button>
+      <p class="warning">
+        Do not publish your API key in public repositories.
+        Browser storage is not a secure place for secrets.
+      </p>
+    </section>
 
-                <button
-                    id="mic-btn"
-                    type="button"
-                    aria-label="Activate voice input"
-                    title="Voice Input"
-                >🎙️</button>
+  </main>
 
-                <button
-                    id="cam-btn"
-                    type="button"
-                    aria-label="Analyze image"
-                    title="Select Image"
-                >📷</button>
+  <footer>
+    J.A.R.V.I.S MOBILE EDITION · PERSONAL ASSISTANT
+  </footer>
 
-                <button
-                    id="clear-btn"
-                    type="button"
-                >CLEAR MEMORY</button>
+</div>
 
-                <input
-                    id="img-input"
-                    type="file"
-                    accept="image/*"
-                    hidden
-                >
-
-            </form>
-        </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer>
-        <p>J.A.R.V.I.S MOBILE SYSTEM</p>
-        <p>PERSONAL AI ASSISTANT</p>
-    </footer>
-
-    <!-- JAVASCRIPT -->
-    <script src="script.js"></script>
-
+<script src="script.js"></script>
 </body>
 </html>
