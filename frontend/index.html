@@ -1,356 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#020914">
+  <title>J.A.R.V.I.S | Mobile AI</title>
 
-    <meta name="theme-color" content="#030914">
-    <meta name="description" content="J.A.R.V.I.S Advanced AI Assistant">
-
-    <title>J.A.R.V.I.S | Advanced AI</title>
-
-    <link rel="stylesheet" href="style.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
-          rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+  <div class="scanlines"></div>
 
-<div class="app-shell">
+  <header class="topbar">
+    <div class="logo-circle">J</div>
+    <div class="brand">
+      <h1>J.A.R.V.I.S</h1>
+      <p>PERSONAL AI SYSTEM</p>
+    </div>
+    <div class="power-indicator">
+      <span class="pulse"></span>
+      <span id="status">ONLINE</span>
+    </div>
+  </header>
 
-    <!-- TOP BAR -->
+  <main>
+    <section class="hero panel">
+      <div class="section-label">01 / SYSTEM STATUS</div>
 
-    <header class="top-bar">
-        <div class="brand">
-            <div class="brand-icon">J</div>
+      <div class="reactor">
+        <div class="reactor-ring ring-one"></div>
+        <div class="reactor-ring ring-two"></div>
+        <div class="reactor-ring ring-three"></div>
+        <div class="reactor-core">J</div>
+      </div>
 
-            <div class="brand-text">
-                <h1>J.A.R.V.I.S</h1>
-                <p>PERSONAL AI SYSTEM</p>
-            </div>
+      <h2>NEURAL INTERFACE</h2>
+      <p class="hero-text">Awaiting your command, Boss.</p>
+
+      <div class="status-grid">
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div><small>AI CORE</small><strong id="ai-status">READY</strong></div>
         </div>
-
-        <div class="system-indicator">
-            <span class="pulse-dot"></span>
-            <span id="status">CORE ACTIVE</span>
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div><small>NETWORK</small><strong id="network-status">CHECKING</strong></div>
         </div>
-    </header>
-
-
-    <!-- MAIN DASHBOARD -->
-
-    <main class="dashboard">
-
-        <!-- LEFT / CORE PANEL -->
-
-        <section class="core-panel">
-
-            <div class="section-heading">
-                <span>01 / NEURAL CORE</span>
-                <span class="small-tag">ONLINE</span>
-            </div>
-
-            <div class="reactor-container">
-                <div class="reactor-ring ring-outer"></div>
-                <div class="reactor-ring ring-middle"></div>
-                <div class="reactor-ring ring-inner"></div>
-
-                <div class="reactor-core">
-                    <div class="core-light"></div>
-                    <span>AI</span>
-                </div>
-
-                <div class="orbit orbit-one"></div>
-                <div class="orbit orbit-two"></div>
-            </div>
-
-            <h2 class="core-title">NEURAL INTERFACE</h2>
-
-            <p class="core-description">
-                Awaiting your command, Boss.
-            </p>
-
-            <div class="system-stats">
-
-                <div class="stat-row">
-                    <span class="stat-label">AI BRAIN</span>
-                    <span class="stat-value" id="ai-status">READY</span>
-                </div>
-
-                <div class="stat-row">
-                    <span class="stat-label">NETWORK</span>
-                    <span class="stat-value" id="network-status">
-                        CHECKING
-                    </span>
-                </div>
-
-                <div class="stat-row">
-                    <span class="stat-label">VOICE</span>
-                    <span class="stat-value">STANDBY</span>
-                </div>
-
-                <div class="stat-row">
-                    <span class="stat-label">MEMORY</span>
-                    <span class="stat-value">LOCAL</span>
-                </div>
-
-            </div>
-
-            <div class="system-footer">
-                JARVIS MOBILE EDITION <span>v2.0</span>
-            </div>
-
-        </section>
-
-
-        <!-- CHAT PANEL -->
-
-        <section class="chat-panel">
-
-            <div class="section-heading">
-                <span>02 / COMMAND CENTER</span>
-                <button id="clear-btn" class="text-button" type="button">
-                    CLEAR CHAT
-                </button>
-            </div>
-
-            <div class="chat-header">
-                <div class="assistant-avatar">J</div>
-
-                <div>
-                    <h2>J.A.R.V.I.S</h2>
-                    <p>
-                        <span class="pulse-dot"></span>
-                        AI ASSISTANT
-                    </p>
-                </div>
-            </div>
-
-            <div id="chat"
-                 class="chat-messages"
-                 role="log"
-                 aria-live="polite">
-
-                <div class="jarvis-message">
-                    Systems initializing, Boss. Ready for your commands.
-                </div>
-
-            </div>
-
-
-            <!-- QUICK COMMANDS -->
-
-            <div class="quick-commands">
-                <button type="button"
-                        class="quick-btn"
-                        data-command="What is the time?">
-                    TIME
-                </button>
-
-                <button type="button"
-                        class="quick-btn"
-                        data-command="Open YouTube">
-                    YOUTUBE
-                </button>
-
-                <button type="button"
-                        class="quick-btn"
-                        data-command="Search latest technology news">
-                    SEARCH
-                </button>
-
-                <button type="button"
-                        class="quick-btn"
-                        data-command="Tell me a joke">
-                    JOKE
-                </button>
-            </div>
-
-
-            <!-- MESSAGE INPUT -->
-
-            <form id="chat-form" class="input-area">
-
-                <button id="mic-btn"
-                        class="icon-button"
-                        type="button"
-                        aria-label="Voice command">
-                    🎙️
-                </button>
-
-                <input
-                    id="msg"
-                    type="text"
-                    placeholder="Give me a command, Boss..."
-                    autocomplete="off"
-                    aria-label="Enter your command"
-                >
-
-                <button id="send"
-                        class="send-button"
-                        type="submit">
-                    SEND
-                </button>
-
-            </form>
-
-            <p class="input-hint">
-                ENTER COMMAND • PRESS SEND
-            </p>
-
-        </section>
-
-    </main>
-
-
-    <!-- QUICK TOOLS -->
-
-    <section class="tools-panel">
-
-        <div class="section-heading">
-            <span>03 / QUICK ACCESS</span>
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div><small>VOICE</small><strong id="voice-status">STANDBY</strong></div>
         </div>
-
-        <div class="tools-grid">
-
-            <button class="tool-card"
-                    type="button"
-                    data-command="Open YouTube">
-                <span class="tool-icon">▶</span>
-                <span>YOUTUBE</span>
-            </button>
-
-            <button class="tool-card"
-                    type="button"
-                    data-command="Open Instagram">
-                <span class="tool-icon">◎</span>
-                <span>INSTAGRAM</span>
-            </button>
-
-            <button class="tool-card"
-                    type="button"
-                    data-command="Open WhatsApp">
-                <span class="tool-icon">✉</span>
-                <span>WHATSAPP</span>
-            </button>
-
-            <button class="tool-card"
-                    type="button"
-                    data-command="What is the time?">
-                <span class="tool-icon">◷</span>
-                <span>TIME</span>
-            </button>
-
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div><small>MEMORY</small><strong>LOCAL</strong></div>
         </div>
-
+      </div>
     </section>
 
+    <section class="panel command-panel">
+      <div class="section-heading">
+        <div class="section-label">02 / COMMAND CENTER</div>
+        <button id="clear-btn" class="button secondary">CLEAR CHAT</button>
+      </div>
 
-    <!-- AI CONFIGURATION -->
-
-    <section class="config-panel">
-
-        <div class="section-heading">
-            <span>04 / AI CONFIGURATION</span>
-            <span class="small-tag">GEMINI</span>
+      <div id="chat" class="chat-box" aria-live="polite">
+        <div class="message assistant-message">
+          <div class="message-label">J.A.R.V.I.S</div>
+          <p>Systems online, Boss. Give me a command.</p>
         </div>
+      </div>
 
-        <p class="config-description">
-            Connect your Gemini API key to enable AI responses.
-        </p>
+      <div class="quick-commands">
+        <button data-command="What time is it?" class="button">◷ TIME</button>
+        <button data-command="Open YouTube" class="button">▶ YOUTUBE</button>
+        <button data-command="Tell me a joke" class="button">✦ JOKE</button>
+        <button data-command="What can you do?" class="button">⌘ HELP</button>
+      </div>
 
-        <div class="api-input-row">
+      <form id="chat-form" autocomplete="off">
+        <button type="button" id="mic-btn" class="button mic-button" aria-label="Voice input">🎙️</button>
+        <input id="msg" type="text" placeholder="Give me a command, Boss..." aria-label="Your command">
+        <button type="submit" id="send" class="button send-button">SEND</button>
+      </form>
 
-            <input
-                id="apiKey"
-                type="password"
-                placeholder="Paste Gemini API key..."
-                autocomplete="off"
-                aria-label="Gemini API key"
-            >
-
-            <button id="saveKey"
-                    type="button"
-                    class="save-button">
-                SAVE KEY
-            </button>
-
-        </div>
-
-        <p class="security-note">
-            Never publish your API key in a public repository.
-        </p>
-
+      <div class="input-hint">ENTER COMMAND · PRESS SEND</div>
     </section>
 
+    <section class="panel">
+      <div class="section-label">03 / QUICK ACCESS</div>
+      <div class="app-grid">
+        <button class="app-button" data-action="youtube">▶<span>YouTube</span></button>
+        <button class="app-button" data-action="google">⌕<span>Google</span></button>
+        <button class="app-button" data-action="instagram">◎<span>Instagram</span></button>
+        <button class="app-button" data-action="whatsapp">✉<span>WhatsApp</span></button>
+      </div>
+    </section>
 
-    <!-- FOOTER -->
+    <section class="panel config-panel">
+      <div class="section-label">04 / AI CONFIGURATION</div>
+      <h2>GEMINI AI</h2>
+      <p class="muted">Add your Gemini API key to enable AI answers.</p>
 
-    <footer class="app-footer">
-        <span>J.A.R.V.I.S MOBILE SYSTEM</span>
-        <span>AWAITING ORDERS, BOSS</span>
-    </footer>
+      <form id="key-form">
+        <label for="apiKey">Gemini API key</label>
+        <input id="apiKey" type="password" placeholder="Paste your API key" autocomplete="off">
+        <div class="config-actions">
+          <button type="submit" class="button">SAVE KEY</button>
+          <button type="button" id="removeKey" class="button secondary">REMOVE KEY</button>
+        </div>
+      </form>
 
-</div>
+      <p id="key-status" class="muted" role="status">AI key not configured.</p>
+      <p class="security-note">Security: never share your API key or publish it in a public repository.</p>
+    </section>
+  </main>
 
+  <footer>
+    <span>J.A.R.V.I.S MOBILE EDITION</span>
+    <span>VERSION 3.0</span>
+  </footer>
 
-<!-- QUICK COMMAND + NETWORK STATUS -->
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        const networkStatus = document.getElementById("network-status");
-
-        if (networkStatus) {
-            networkStatus.textContent =
-                navigator.onLine ? "ONLINE" : "OFFLINE";
-        }
-
-        window.addEventListener("online", function () {
-            if (networkStatus) networkStatus.textContent = "ONLINE";
-        });
-
-        window.addEventListener("offline", function () {
-            if (networkStatus) networkStatus.textContent = "OFFLINE";
-        });
-
-        // Connect the chat form to the script.js send handler.
-        const form = document.getElementById("chat-form");
-
-        if (form) {
-            form.addEventListener("submit", function (event) {
-                event.preventDefault();
-
-                if (typeof sendMessage === "function") {
-                    sendMessage();
-                }
-            });
-        }
-
-        // Quick command buttons.
-        document.querySelectorAll("[data-command]").forEach(function (button) {
-            button.addEventListener("click", function () {
-                const input = document.getElementById("msg");
-
-                if (!input) return;
-
-                input.value = button.dataset.command;
-
-                if (typeof sendMessage === "function") {
-                    sendMessage();
-                }
-            });
-        });
-
-    });
-</script>
-
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
-                  </html>
+</html>
