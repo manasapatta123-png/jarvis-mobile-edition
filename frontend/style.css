@@ -1,66 +1,235 @@
-// ===== 1. API KEY (Safe: browser లో మాతమ్ర ే) =====
-let API_KEY = localStorage.getItem('jarvis_key');
-if(!API_KEY){
-API_KEY = prompt('Enter your Gemini API Key:');
-if(API_KEY) localStorage.setItem('jarvis_key', API_KEY);
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Orbitron', monospace;
+  }
+
+:root {
+--cyan: #00ffff;
+--background: #000;
+--panel: rgba(0, 255, 255, 0.05);
+--border: rgba(0, 255, 255, 0.3);
 }
-// ===== 2. SMART MODELS (ఒకటిfail అయితేnext auto try) =====
-const MODELS = ["gemini-3.6-flash", "gemini-flash-latest"];
-const chat=document.getElementById('chat');
-const input=document.getElementById('msg');
-const micBtn=document.getElementById('mic-btn');
-// ===== 3. GEMINI BRAIN (auto-fallback) =====
-async function callGemini(p){ let lastErr;
-for(const m of MODELS){
-try{
-const res=await fetch(
-"https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent?key="
-+API_KEY,
-{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({contents:[{parts:[{text:p}]}]})});
-const data=await res.json();
-if(data.error){
-lastErr=new Error(data.error.message);
-if(/high demand|temporar|quota|rate|unavailable|no longer
-available|deprecated/i.test(data.error.message)) continue;
-throw lastErr;
+
+body {
+background: var(--background);
+color: var(--cyan);
+padding: 20px;
+min-height: 100vh;
+overflow-x: hidden;
 }
-return data.candidates[0].content.parts[0].text;
-}catch(e){ lastErr=e; }
+
+header {
+text-align: center;
+margin-top: 10px;
 }
-throw lastErr;
+
+header h1 {
+font-size: 28px;
+letter-spacing: 6px;
+text-shadow: 0 0 12px var(--cyan);
 }
-async function askGemini(p){
-add('J.A.R.V.I.S: Thinking...','ai');
-try{
-const reply=await callGemini(p);
-chat.lastChild.innerText='J.A.R.V.I.S: '+reply;
-speak(reply); // reply వచ్చి న వెంటనేVOICE
-}catch(e){
-chat.lastChild.innerText='J.A.R.V.I.S: ERROR - '+e.message;
+
+header p {
+font-size: 10px;
+letter-spacing: 4px;
+opacity: 0.7;
+margin-top: 8px;
+}
+
+.core-section {
+text-align: center;
+}
+
+.core {
+position: relative;
+width: 160px;
+height: 160px;
+margin: 30px auto 20px;
+}
+
+.ring {
+position: absolute;
+border: 2px solid var(--cyan);
+border-radius: 50%;
+box-shadow: 0 0 15px var(--cyan);
+}
+
+.r1 {
+inset: 0;
+border-top-color: transparent;
+animation: spin 3s linear infinite;
+}
+
+.r2 {
+inset: 20px;
+border-bottom-color: transparent;
+animation: spin 2s linear infinite reverse;
+}
+
+.center {
+position: absolute;
+inset: 50px;
+background: var(--cyan);
+border-radius: 50%;
+box-shadow: 0 0 30px var(--cyan);
+animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+to {
+transform: rotate(360deg);
 }
 }
-// ===== 4. SPEECH RECOGNITION (వినడం) =====
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-const rec=new SR(); rec.lang='en-US'; // Telugu కి'te-IN'
-rec.onresult=(e)=>{const t=e.results[0][0].transcript;add('YOU: '+t,'user');askGemini(t);};
-micBtn.onclick=()=>{rec.start();micBtn.innerText='LISTENING...';};
-rec.onend=()=>{micBtn.innerText='🎙️';};
-// ===== 5. TEXT-TO-SPEECH (మాట్లాడటం) =====
-let voices=[];
-function loadVoices(){ voices=speechSynthesis.getVoices(); }
-loadVoices();
-speechSynthesis.onvoiceschanged=loadVoices;
-function speak(t){
-const u=new SpeechSynthesisUtterance(t); u.rate=1.05; u.pitch=0.85;
-const v=voices.find(v=>v.lang.startsWith('en'));
-if(v) u.voice=v;
-speechSynthesis.speak(u);
+
+@keyframes pulse {
+50% {
+opacity: 0.4;
+transform: scale(0.85);
 }
-// ===== 6. TEXT SEND BUTTON =====
-document.getElementById('send').onclick=()=>{
-const t=input.value.trim(); if(!t)return;
-add('YOU: '+t,'user'); input.value=''; askGemini(t);
-};
-function add(t,w){const d=document.createElement('div');d.className='msg
-'+w;d.innerText=t;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
+}
+
+.core-text {
+font-size: 11px;
+letter-spacing: 3px;
+text-shadow: 0 0 8px var(--cyan);
+}
+
+.status,
+.assistant {
+border: 1px solid var(--border);
+background: var(--panel);
+padding: 14px;
+margin-top: 22px;
+border-radius: 5px;
+box-shadow: 0 0 12px rgba(0, 255, 255, 0.05);
+}
+
+.status h2,
+.assistant h2 {
+font-size: 12px;
+letter-spacing: 2px;
+margin-bottom: 14px;
+}
+
+.row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 10px;
+font-size: 10px;
+margin: 13px 0;
+}
+
+.on {
+color: #00ff66;
+}
+
+.off {
+color: #ff4444;
+}
+
+.chat {
+border: 1px solid var(--border);
+height: 220px;
+overflow-y: auto;
+padding: 10px;
+font-size: 11px;
+background: rgba(0, 0, 0, 0.6);
+overflow-wrap: anywhere;
+border-radius: 4px;
+scrollbar-width: thin;
+}
+
+.msg {
+margin: 8px 0;
+padding: 9px;
+border-left: 2px solid var(--cyan);
+background: rgba(0, 255, 255, 0.07);
+line-height: 1.6;
+white-space: pre-wrap;
+}
+
+.msg.user {
+border-left-color: #fff;
+color: #fff;
+background: rgba(255, 255, 255, 0.05);
+}
+
+.input-area {
+display: flex;
+gap: 8px;
+margin-top: 12px;
+}
+
+input {
+flex: 1;
+min-width: 0;
+background: #000;
+border: 1px solid var(--cyan);
+color: var(--cyan);
+padding: 12px 10px;
+font-size: 11px;
+outline: none;
+border-radius: 3px;
+}
+
+input::placeholder {
+color: rgba(0, 255, 255, 0.5);
+}
+
+input:focus {
+box-shadow: 0 0 8px var(--cyan);
+}
+
+button {
+background: var(--cyan);
+color: #000;
+border: none;
+border-radius: 3px;
+padding: 10px 14px;
+font-size: 11px;
+font-weight: bold;
+cursor: pointer;
+}
+
+button:active {
+transform: scale(0.96);
+}
+
+button:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+footer {
+text-align: center;
+margin: 25px 0 10px;
+font-size: 8px;
+letter-spacing: 2px;
+line-height: 2;
+opacity: 0.5;
+}
+
+@media (max-width: 360px) {
+body {
+padding: 12px;
+}
+
+header h1 {
+    font-size: 23px;
+    letter-spacing: 4px;
+}
+
+.row {
+    font-size: 9px;
+}
+
+button {
+    padding: 10px;
+}
+
+  }
