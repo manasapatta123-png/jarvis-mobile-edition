@@ -1,70 +1,263 @@
-"use strict";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#020914">
+  <meta name="description" content="JARVIS personal AI assistant interface">
+  <title>J.A.R.V.I.S | Advanced AI</title>
 
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("chat-form");
-  const input = document.getElementById("msg");
-  const chat = document.getElementById("chat");
-  const status = document.getElementById("status");
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  function reply(text, sender) {
-    const box = document.createElement("div");
-    box.className = sender === "user"
-      ? "message user-message"
-      : "message assistant-message";
+  <link rel="stylesheet" href="style.css">
+</head>
 
-    const label = document.createElement("div");
-    label.className = "message-label";
-    label.textContent = sender === "user" ? "BOSS" : "J.A.R.V.I.S";
+<body>
 
-    const p = document.createElement("p");
-    p.textContent = text;
+  <!-- TOP NAVIGATION -->
+  <header class="topbar">
+    <div class="logo-circle">J</div>
 
-    box.append(label, p);
-    chat.appendChild(box);
-    chat.scrollTop = chat.scrollHeight;
-  }
+    <div class="brand">
+      <h1>J.A.R.V.I.S</h1>
+      <p>JUST A RATHER VERY INTELLIGENT SYSTEM</p>
+    </div>
 
-  if (!form || !input || !chat) {
-    alert("JARVIS ERROR: Check index.html element IDs.");
-    return;
-  }
+    <div class="power-indicator">
+      <span class="pulse"></span>
+      <span id="status">ONLINE</span>
+    </div>
+  </header>
 
-  status.textContent = "READY";
+  <main>
 
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
+    <!-- MAIN AI CORE -->
+    <section class="panel hero">
+      <div class="section-label">01 / ARTIFICIAL INTELLIGENCE</div>
 
-    const command = input.value.trim();
-    if (!command) return;
+      <div class="reactor" aria-label="JARVIS animated core">
+        <div class="reactor-ring ring-one"></div>
+        <div class="reactor-ring ring-two"></div>
+        <div class="reactor-ring ring-three"></div>
+        <div class="reactor-core">J</div>
+      </div>
 
-    input.value = "";
-    reply(command, "user");
+      <h2>NEURAL CORE</h2>
+      <p class="hero-text">Your personal assistant is ready.</p>
+      <p class="muted">SYSTEM ID: JARVIS-MOBILE-01</p>
 
-    const cmd = command.toLowerCase();
-    let answer;
+      <div class="status-grid">
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div>
+            <small>AI CORE</small>
+            <strong id="ai-status">STANDBY</strong>
+          </div>
+        </div>
 
-    if (cmd.includes("time")) {
-      answer = "The time is " + new Date().toLocaleTimeString();
-    } else if (cmd.includes("date")) {
-      answer = "Today's date is " + new Date().toLocaleDateString();
-    } else if (cmd.includes("youtube")) {
-      answer = "Opening YouTube, Boss.";
-      window.open("https://www.youtube.com/", "_blank");
-    } else if (cmd.includes("google")) {
-      answer = "Opening Google, Boss.";
-      window.open("https://www.google.com/", "_blank");
-    } else if (cmd.includes("instagram")) {
-      answer = "Opening Instagram, Boss.";
-      window.open("https://www.instagram.com/", "_blank");
-    } else if (cmd.includes("whatsapp")) {
-      answer = "Opening WhatsApp, Boss.";
-      window.open("https://wa.me/", "_blank");
-    } else if (cmd.includes("hello") || cmd.includes("hi")) {
-      answer = "Hello Boss! JARVIS command system is working.";
-    } else {
-      answer = "Command received, Boss. Basic system is working. AI connection is not enabled in this test.";
-    }
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div>
+            <small>NETWORK</small>
+            <strong id="network-status">CHECKING</strong>
+          </div>
+        </div>
 
-    reply(answer, "assistant");
-  });
-});
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div>
+            <small>VOICE ENGINE</small>
+            <strong id="voice-status">STANDBY</strong>
+          </div>
+        </div>
+
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div>
+            <small>MEMORY</small>
+            <strong>LOCAL</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMAND CENTER -->
+    <section class="panel command-panel">
+      <div class="section-heading">
+        <div>
+          <div class="section-label">02 / COMMAND CENTER</div>
+          <h2>Talk to JARVIS</h2>
+        </div>
+
+        <button type="button" id="clear-btn" class="button secondary">
+          CLEAR
+        </button>
+      </div>
+
+      <!-- Chat messages appear here -->
+      <div id="chat" class="chat-box" aria-live="polite">
+        <div class="message assistant-message">
+          <div class="message-label">J.A.R.V.I.S</div>
+          <p>Systems online, Boss. How can I help you?</p>
+        </div>
+      </div>
+
+      <!-- QUICK COMMANDS -->
+      <div class="section-label quick-label">QUICK COMMANDS</div>
+
+      <div class="quick-commands">
+        <button type="button" class="button" data-command="Hello JARVIS">
+          HELLO
+        </button>
+
+        <button type="button" class="button" data-command="What time is it?">
+          TIME
+        </button>
+
+        <button type="button" class="button" data-command="What is today's date?">
+          DATE
+        </button>
+
+        <button type="button" class="button" data-command="What can you do?">
+          HELP
+        </button>
+      </div>
+
+      <!-- COMMAND INPUT -->
+      <form id="chat-form" autocomplete="off">
+        <button
+          type="button"
+          id="mic-btn"
+          class="button mic-button"
+          aria-label="Start voice input"
+          title="Voice input">
+          🎙️
+        </button>
+
+        <input
+          type="text"
+          id="msg"
+          name="command"
+          placeholder="Give me a command, Boss..."
+          aria-label="Enter your command"
+          autocomplete="off"
+          required>
+
+        <button type="submit" id="send" class="button send-button">
+          SEND
+        </button>
+      </form>
+
+      <p class="input-hint">
+        ENTER COMMAND · PRESS SEND · VOICE SUPPORT DEPENDS ON YOUR BROWSER
+      </p>
+    </section>
+
+    <!-- APP LAUNCHER -->
+    <section class="panel">
+      <div class="section-label">03 / QUICK ACCESS</div>
+      <h2>Application Launcher</h2>
+
+      <div class="app-grid">
+        <button type="button" class="app-button" data-action="youtube">
+          <span class="app-icon">▶</span>
+          <span>YouTube</span>
+        </button>
+
+        <button type="button" class="app-button" data-action="google">
+          <span class="app-icon">⌕</span>
+          <span>Google</span>
+        </button>
+
+        <button type="button" class="app-button" data-action="instagram">
+          <span class="app-icon">◎</span>
+          <span>Instagram</span>
+        </button>
+
+        <button type="button" class="app-button" data-action="whatsapp">
+          <span class="app-icon">✉</span>
+          <span>WhatsApp</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- AI CONFIGURATION -->
+    <section class="panel config-panel">
+      <div class="section-label">04 / INTELLIGENCE CONFIGURATION</div>
+      <h2>Gemini AI Connection</h2>
+
+      <p class="muted">
+        Configure your Gemini API key to enable AI-powered answers.
+      </p>
+
+      <form id="key-form" autocomplete="off">
+        <label for="apiKey">API Key</label>
+
+        <input
+          id="apiKey"
+          type="password"
+          placeholder="Enter your Gemini API key"
+          autocomplete="off">
+
+        <div class="config-actions">
+          <button type="submit" class="button">SAVE KEY</button>
+
+          <button
+            type="button"
+            id="removeKey"
+            class="button secondary">
+            REMOVE KEY
+          </button>
+        </div>
+      </form>
+
+      <p id="key-status" class="muted" role="status">
+        API connection not configured.
+      </p>
+
+      <p class="security-note">
+        Security notice: browser storage is not fully secure. Never publish
+        your API key in a public repository or share it with others.
+      </p>
+    </section>
+
+    <!-- SYSTEM INFORMATION -->
+    <section class="panel">
+      <div class="section-label">05 / SYSTEM INFORMATION</div>
+
+      <div class="system-info">
+        <div>
+          <span>PLATFORM</span>
+          <strong>WEB INTERFACE</strong>
+        </div>
+
+        <div>
+          <span>DEVICE</span>
+          <strong>MOBILE READY</strong>
+        </div>
+
+        <div>
+          <span>COMMAND MODE</span>
+          <strong>TEXT / VOICE</strong>
+        </div>
+
+        <div>
+          <span>AI MODE</span>
+          <strong>API REQUIRED</strong>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>J.A.R.V.I.S MOBILE EDITION</span>
+    <span>ADVANCED INTERFACE</span>
+  </footer>
+
+  <!-- Load JavaScript only once -->
+  <script src="script.js"></script>
+
+</body>
+        </html>
