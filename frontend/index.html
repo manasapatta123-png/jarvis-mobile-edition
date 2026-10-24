@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
+    <meta name="description" content="J.A.R.V.I.S Personal AI Assistant">
 
-    <title>J.A.R.V.I.S | Mobile Edition</title>
+    <title>J.A.R.V.I.S | Personal AI Assistant</title>
 
-    <!-- CSS File -->
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+    <!-- HEADER -->
     <header>
         <h1>J.A.R.V.I.S</h1>
-        <p>MOBILE EDITION</p>
+        <p>PERSONAL AI ASSISTANT</p>
     </header>
 
     <main>
 
-        <!-- JARVIS CORE -->
+        <!-- ANIMATED CORE -->
         <section class="core-section">
             <div class="core">
                 <div class="ring r1"></div>
@@ -28,68 +31,104 @@
                 <div class="center"></div>
             </div>
 
-            <p class="core-text">CORE ACTIVE</p>
+            <p class="core-text">SYSTEM READY</p>
         </section>
 
-        <!-- SYSTEM STATUS -->
+        <!-- SYSTEM DIAGNOSTICS -->
         <section class="status">
-            <h2>SYSTEM STATUS</h2>
+            <h2>SYSTEM DIAGNOSTICS</h2>
 
             <div class="row">
-                <span>INTERFACE</span>
-                <b class="on">● ONLINE</b>
+                <span>AI ENGINE</span>
+                <b id="aiStatus" class="off">● CHECKING</b>
             </div>
 
             <div class="row">
-                <span>VOICE INPUT</span>
-                <b id="voiceStatus" class="off">○ READY</b>
+                <span>CONNECTION</span>
+                <b id="connectionStatus" class="off">● CHECKING</b>
             </div>
 
             <div class="row">
-                <span>AI BRAIN</span>
-                <b id="aiStatus" class="off">○ NOT CONNECTED</b>
+                <span>VOICE INTERFACE</span>
+                <b id="voiceStatus" class="off">● READY</b>
+            </div>
+
+            <div class="row">
+                <span>LONG-TERM MEMORY</span>
+                <b id="memoryStatus" class="off">● LOCAL</b>
             </div>
         </section>
 
-        <!-- ASSISTANT CHAT -->
+        <!-- CHAT TERMINAL -->
         <section class="assistant">
             <h2>ASSISTANT TERMINAL</h2>
 
-            <div class="chat" id="chat" aria-live="polite">
+            <div
+                class="chat"
+                id="chat"
+                role="log"
+                aria-live="polite"
+                aria-relevant="additions"
+            >
                 <div class="msg ai">
-                    J.A.R.V.I.S: Hello, Boss! Systems ready. Type a message or tap the microphone.
+                    J.A.R.V.I.S: Hello, Boss! System initialized. How can I help you?
                 </div>
             </div>
 
-            <!-- MESSAGE INPUT -->
-            <div class="input-area">
+            <!-- COMMAND INPUT -->
+            <form class="input-area" id="chatForm">
+
                 <input
                     type="text"
                     id="msg"
-                    placeholder="Ask J.A.R.V.I.S..."
+                    placeholder="Enter a command for J.A.R.V.I.S..."
                     autocomplete="off"
-                    aria-label="Enter your message"
+                    aria-label="Enter your command"
                 >
 
                 <button
-                    id="mic"
-                    type="button"
-                    title="Voice Input"
-                    aria-label="Voice input"
-                >🎤</button>
+                    id="send"
+                    type="submit"
+                >EXECUTE</button>
 
-                <button id="send" type="button">SEND</button>
-            </div>
+                <button
+                    id="mic-btn"
+                    type="button"
+                    aria-label="Activate voice input"
+                    title="Voice Input"
+                >🎙️</button>
+
+                <button
+                    id="cam-btn"
+                    type="button"
+                    aria-label="Analyze image"
+                    title="Select Image"
+                >📷</button>
+
+                <button
+                    id="clear-btn"
+                    type="button"
+                >CLEAR MEMORY</button>
+
+                <input
+                    id="img-input"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                >
+
+            </form>
         </section>
 
     </main>
 
+    <!-- FOOTER -->
     <footer>
         <p>J.A.R.V.I.S MOBILE SYSTEM</p>
-        <p>PERSONAL ASSISTANT INTERFACE</p>
+        <p>PERSONAL AI ASSISTANT</p>
     </footer>
 
-    <!-- JavaScript File -->
+    <!-- JAVASCRIPT -->
     <script src="script.js"></script>
 
 </body>
