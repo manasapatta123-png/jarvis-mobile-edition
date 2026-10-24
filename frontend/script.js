@@ -1,567 +1,481 @@
 // ========================================
-// J.A.R.V.I.S MOBILE ASSISTANT
-// Fixed JavaScript
+// J.A.R.V.I.S ADVANCED MOBILE ASSISTANT
+// Voice + AI + Memory + Local Commands
 // ========================================
 
-"use strict";
+const $ = id => document.getElementById(id);
 
-// 1. CONFIGURATION
-const MODELS = [
-    "gemini-3.8-flash",
-    "gemini-3.6-flash",
-    "gemini-flash-latest"
-];
+const chat = $("chat");
+const input = $("message");
+const statusText = $("status");
+const aiStatus = $("aiStatus");
+const voiceStatus = $("voiceStatus");
 
-const API_URL =
-    "https://generativelanguage.googleapis.com/v1beta/models/";
+let recognition = null;
+let listening = false;
 
-// 2. HTML ELEMENTS
-const chat = document.getElementById("chat");
-const input = document.getElementById("msg");
-const sendBtn = document.getElementById("send");
-const micBtn = document.getElementById("mic-btn");
-const clearBtn = document.getElementById("clear-btn");
-const camBtn = document.getElementById("cam-btn");
-const imgInput = document.getElementById("img-input");
+let notes = JSON.parse(
+  localStorage.getItem("jarvisNotes") || "[]"
+);
 
-const aiStatus = document.getElementById("aiStatus");
-const connectionStatus = document.getElementById("connectionStatus");
-const voiceStatus = document.getElementById("voiceStatus");
-const memoryStatus = document.getElementById("memoryStatus");
+let history = JSON.parse(
+  localStorage.getItem("jarvisHistory") || "[]"
+);
 
-// 3. API KEY
-let API_KEY = localStorage.getItem("jarvis_key");
+// For personal testing only.
+// Do not publish your API key in public JavaScript files.
+let apiKey = "";
 
-if (!API_KEY) {
-    API_KEY = prompt("Enter your Gemini API key:");
-
-    if (API_KEY && API_KEY.trim()) {
-        API_KEY = API_KEY.trim();
-        localStorage.setItem("jarvis_key", API_KEY);
-    } else {
-        API_KEY = "";
-    }
+const savedKey = localStorage.getItem("jarvisApiKey");
+if (savedKey) {
+  apiKey = savedKey;
+  $("apiKey").value = savedKey;
 }
 
-// 4. LOCAL MEMORY
-let MEMORY = [];
+// Check the current Gemini model list in official documentation
+// if the model configured below is unavailable.
+const MODEL = "gemini-2.5-flash";
 
-try {
-    MEMORY = JSON.parse(
-        localStorage.getItem("jarvis_memory") || "[]"
-    );
+// ----------------------------------------
+// MESSAGES
+// ----------------------------------------
 
-    if (!Array.isArray(MEMORY)) {
-        MEMORY = [];
-    }
-} catch (error) {
-    MEMORY = [];
+function addMessage(type, text) {
+  const box = document.createElement("div");
+  box.className = "message " + type;
+
+  const title = document.createElement("b");
+  title.textContent = type === "user" ? "YOU" : "J.A.R.V.I.S";
+
+  const body = document.createElement("p");
+  body.textContent = text;
+
+  box.append(title, body);
+  chat.appendChild(box);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-function saveMemory() {
-    try {
-        localStorage.setItem(
-            "jarvis_memory",
-            JSON.stringify(MEMORY)
-        );
-
-        if (memoryStatus) {
-            memoryStatus.textContent = "● LOCAL";
-            memoryStatus.className = "on";
-        }
-    } catch (error) {
-        console.error("Memory save failed:", error);
-
-        if (memoryStatus) {
-            memoryStatus.textContent = "● SAVE ERROR";
-            memoryStatus.className = "off";
-        }
-    }
+function setStatus(text) {
+  statusText.textContent = text;
 }
 
-// 5. CHAT DISPLAY
-function add(message, type = "ai") {
-    if (!chat) return null;
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
 
-    const element = document.createElement("div");
+  speechSynthesis.cancel();
 
-    element.className = "msg " + type;
-    element.textContent = message;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-IN";
+  utterance.rate = 1;
+  utterance.pitch = 0.95;
 
-    chat.appendChild(element);
-    chat.scrollTop = chat.scrollHeight;
-
-    return element;
+  speechSynthesis.speak(utterance);
 }
 
-// Restore previous chat messages
-MEMORY.forEach(function (item) {
-    if (!item || !item.text) return;
+function reply(text, shouldSpeak = true) {
+  addMessage("jarvis", text);
+  setStatus("SYSTEM READY");
 
-    if (item.role === "user") {
-        add("YOU: " + item.text, "user");
-    } else if (item.role === "model") {
-        add("J.A.R.V.I.S: " + item.text, "ai");
-    }
+  if (shouldSpeak) speak(text);
+}
+
+function saveHistory() {
+  localStorage.setItem(
+    "jarvisHistory",
+    JSON.stringify(history.slice(-24))
+  );
+}
+
+// ----------------------------------------
+// API KEY
+// ----------------------------------------
+
+$("saveKey").addEventListener("click", () => {
+  const key = $("apiKey").value.trim();
+
+  if (!key) {
+    reply("Please enter your API key first.");
+    return;
+  }
+
+  apiKey = key;
+  localStorage.setItem("jarvisApiKey", key);
+
+  reply(
+    "API key saved in this browser. Remember, browser storage " +
+    "is not secure for secrets. Do not publish this project publicly."
+  );
 });
 
-// 6. API KEY VALIDATION
-function getAPIKey() {
-    if (API_KEY) return API_KEY;
+// ----------------------------------------
+// CALCULATOR
+// ----------------------------------------
 
-    const enteredKey = prompt("Enter your Gemini API key:");
+function calculate(expression) {
+  const value = expression.replace(/\s/g, "");
 
-    if (!enteredKey || !enteredKey.trim()) {
-        throw new Error("API key is missing.");
-    }
+  if (!/^[0-9+\-*/().%]+$/.test(value)) {
+    return null;
+  }
 
-    API_KEY = enteredKey.trim();
-    localStorage.setItem("jarvis_key", API_KEY);
+  try {
+    const result = Function(
+      '"use strict"; return (' + value + ')'
+    )();
 
-    return API_KEY;
+    return Number.isFinite(result) ? String(result) : null;
+  } catch {
+    return null;
+  }
 }
 
-// 7. GEMINI API REQUEST
-async function requestGemini(contents) {
-    const key = getAPIKey();
-    let lastError = "No available Gemini model.";
+// ----------------------------------------
+// GOOGLE AND YOUTUBE
+// ----------------------------------------
 
-    for (const model of MODELS) {
-        try {
-            const response = await fetch(
-                API_URL + model + ":generateContent",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "x-goog-api-key": key
-                    },
-                    body: JSON.stringify({
-                        contents: contents
-                    })
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || data.error) {
-                const message =
-                    data.error?.message ||
-                    "HTTP error " + response.status;
-
-                lastError = message;
-
-                // Retry another model only for model availability
-                // or temporary service errors.
-                if (
-                    response.status === 404 ||
-                    response.status === 429 ||
-                    response.status >= 500 ||
-                    /not found|unavailable|temporar|high demand/i.test(message)
-                ) {
-                    continue;
-                }
-
-                throw new Error(message);
-            }
-
-            const parts = data.candidates?.[0]?.content?.parts || [];
-
-            const answer = parts
-                .filter(part => typeof part.text === "string")
-                .map(part => part.text)
-                .join("\n")
-                .trim();
-
-            if (!answer) {
-                throw new Error(
-                    "The AI returned no text. Try another message."
-                );
-            }
-
-            if (aiStatus) {
-                aiStatus.textContent = "● OPERATIONAL";
-                aiStatus.className = "on";
-            }
-
-            if (connectionStatus) {
-                connectionStatus.textContent = "● ONLINE";
-                connectionStatus.className = "on";
-            }
-
-            return answer;
-
-        } catch (error) {
-            lastError = error.message || "Network request failed.";
-
-            if (
-                /API key|permission|unauthorized|invalid argument|billing/i
-                    .test(lastError)
-            ) {
-                throw error;
-            }
-        }
-    }
-
-    if (aiStatus) {
-        aiStatus.textContent = "● ERROR";
-        aiStatus.className = "off";
-    }
-
-    if (connectionStatus) {
-        connectionStatus.textContent = "● OFFLINE";
-        connectionStatus.className = "off";
-    }
-
-    throw new Error(lastError);
+function googleSearch(query) {
+  window.open(
+    "https://www.google.com/search?q=" +
+      encodeURIComponent(query || ""),
+    "_blank"
+  );
 }
 
-// 8. CHAT HISTORY FORMAT
-function getConversation(promptText) {
-    const contents = MEMORY
-        .filter(item =>
-            item &&
-            (item.role === "user" || item.role === "model") &&
-            typeof item.text === "string"
-        )
-        .slice(-12)
-        .map(item => ({
-            role: item.role,
-            parts: [{ text: item.text }]
-        }));
+function youtubeSearch(query) {
+  window.open(
+    "https://www.youtube.com/results?search_query=" +
+      encodeURIComponent(query || ""),
+    "_blank"
+  );
+}
 
-    contents.push({
+// ----------------------------------------
+// LOCAL COMMANDS
+// ----------------------------------------
+
+function runLocalCommand(command) {
+  const text = command.toLowerCase().trim();
+
+  if (/^(hi|hello|hey)\b/.test(text)) {
+    reply("Hello Boss. All systems online.");
+    return true;
+  }
+
+  if (text.includes("time")) {
+    reply("The time is " + new Date().toLocaleTimeString("en-IN"));
+    return true;
+  }
+
+  if (text.includes("date") || text.includes("today")) {
+    reply("Today's date is " +
+      new Date().toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      })
+    );
+    return true;
+  }
+
+  if (text.startsWith("calculate ")) {
+    const result = calculate(command.slice(10));
+
+    reply(result === null
+      ? "I could not calculate that. Try: Calculate 25 * 4."
+      : "The answer is " + result
+    );
+
+    return true;
+  }
+
+  if (text === "open google" || text === "google") {
+    googleSearch("");
+    reply("Opening Google, Boss.");
+    return true;
+  }
+
+  if (text.startsWith("search ")) {
+    googleSearch(command.slice(7));
+    reply("Searching the web, Boss.");
+    return true;
+  }
+
+  if (text === "open youtube" || text === "youtube") {
+    youtubeSearch("");
+    reply("Opening YouTube, Boss.");
+    return true;
+  }
+
+  if (text.startsWith("search youtube ")) {
+    youtubeSearch(command.slice(15));
+    reply("Searching YouTube, Boss.");
+    return true;
+  }
+
+  if (text.startsWith("remember ")) {
+    notes.push(command.slice(9));
+    localStorage.setItem("jarvisNotes", JSON.stringify(notes));
+    reply("Memory updated, Boss.");
+    return true;
+  }
+
+  if (text.includes("show notes")) {
+    reply(notes.length
+      ? notes.map((note, i) => `${i + 1}. ${note}`).join("\n")
+      : "No notes saved yet."
+    );
+    return true;
+  }
+
+  if (text.includes("clear notes")) {
+    notes = [];
+    localStorage.setItem("jarvisNotes", "[]");
+    reply("All notes cleared.");
+    return true;
+  }
+
+  if (text === "clear chat") {
+    history = [];
+    saveHistory();
+    chat.replaceChildren();
+    reply("Chat cleared.");
+    return true;
+  }
+
+  if (text === "help" || text.includes("commands")) {
+    reply(
+      "Try these commands: What time is it? What is today's date? " +
+      "Open Google. Search cats. Open YouTube. " +
+      "Calculate 25 * 4. Remember buy a notebook. Show notes."
+    );
+    return true;
+  }
+
+  return false;
+}
+
+// ----------------------------------------
+// GEMINI AI
+// ----------------------------------------
+
+async function askAI(userText) {
+  if (!apiKey) {
+    reply(
+      "My AI brain is not connected yet, Boss. Add a Gemini API key " +
+      "in AI Configuration. Local commands still work without AI."
+    );
+    return;
+  }
+
+  aiStatus.textContent = "THINKING";
+  setStatus("AI PROCESSING...");
+
+  try {
+    const url =
+      "https://generativelanguage.googleapis.com/v1beta/models/" +
+      MODEL + ":generateContent";
+
+    const contents = [
+      ...history.slice(-20).map(item => ({
+        role: item.role,
+        parts: [{ text: item.text }]
+      })),
+      {
         role: "user",
-        parts: [{ text: promptText }]
+        parts: [{ text: userText }]
+      }
+    ];
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{
+            text:
+              "You are JARVIS, a helpful futuristic AI assistant. " +
+              "Address the user as Boss. Be accurate, safe, and clear. " +
+              "Never claim you performed a phone action unless you did."
+          }]
+        },
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 800
+        }
+      })
     });
 
-    return contents;
-}
+    const data = await response.json();
 
-// 9. ASK JARVIS
-let busy = false;
-
-async function askGemini(promptText) {
-    const question = promptText.trim();
-
-    if (!question || busy) return;
-
-    if (!API_KEY) {
-        add("J.A.R.V.I.S: API key is required to connect to the AI.", "ai");
-        return;
+    if (!response.ok) {
+      throw new Error(
+        data.error?.message || "API error " + response.status
+      );
     }
 
-    busy = true;
+    const answer = data.candidates?.[0]?.content?.parts
+      ?.map(part => part.text || "")
+      .join("")
+      .trim();
 
-    if (sendBtn) sendBtn.disabled = true;
-    if (input) input.disabled = true;
-
-    const thinking = add("J.A.R.V.I.S: Thinking...", "ai");
-
-    try {
-        const contents = getConversation(question);
-        const reply = await requestGemini(contents);
-
-        MEMORY.push({ role: "user", text: question });
-        MEMORY.push({ role: "model", text: reply });
-
-        // Keep recent messages in local storage.
-        MEMORY = MEMORY.slice(-40);
-        saveMemory();
-
-        if (thinking) {
-            thinking.textContent = "J.A.R.V.I.S: " + reply;
-        }
-
-        speak(reply);
-
-    } catch (error) {
-        console.error("JARVIS error:", error);
-
-        if (thinking) {
-            thinking.textContent =
-                "J.A.R.V.I.S ERROR: " +
-                (error.message || "Something went wrong.");
-        }
-
-    } finally {
-        busy = false;
-
-        if (sendBtn) sendBtn.disabled = false;
-        if (input) {
-            input.disabled = false;
-            input.focus();
-        }
+    if (!answer) {
+      throw new Error("No answer received from AI.");
     }
+
+    history.push(
+      { role: "user", text: userText },
+      { role: "model", text: answer }
+    );
+
+    history = history.slice(-24);
+    saveHistory();
+
+    aiStatus.textContent = "CONNECTED";
+    reply(answer);
+
+  } catch (error) {
+    console.error(error);
+    aiStatus.textContent = "ERROR";
+
+    reply(
+      "AI connection failed. Check your internet, API key, API access " +
+      "and model availability. Error: " + error.message
+    );
+  }
 }
 
-// 10. SEND BUTTON AND ENTER KEY
-function sendMessage(event) {
-    if (event) event.preventDefault();
+// ----------------------------------------
+// COMMAND ROUTER
+// ----------------------------------------
 
-    if (!input) return;
+async function runCommand(command) {
+  const text = command.trim();
 
-    const message = input.value.trim();
+  if (!text) return;
 
-    if (!message || busy) return;
+  addMessage("user", text);
+  input.value = "";
 
-    add("YOU: " + message, "user");
-    input.value = "";
+  if (runLocalCommand(text)) return;
 
-    askGemini(message);
+  await askAI(text);
 }
 
-const chatForm = document.getElementById("chatForm");
+// ----------------------------------------
+// TEXT INPUT
+// ----------------------------------------
 
-if (chatForm) {
-    chatForm.addEventListener("submit", sendMessage);
-} else if (sendBtn) {
-    sendBtn.addEventListener("click", sendMessage);
-}
+$("chatForm").addEventListener("submit", event => {
+  event.preventDefault();
+  runCommand(input.value);
+});
 
-// 11. IMAGE ANALYSIS
-if (camBtn && imgInput) {
-    camBtn.addEventListener("click", function () {
-        imgInput.click();
-    });
+// ----------------------------------------
+// QUICK COMMANDS
+// ----------------------------------------
 
-    imgInput.addEventListener("change", async function () {
-        const file = imgInput.files?.[0];
+document.querySelectorAll("[data-command]").forEach(button => {
+  button.addEventListener("click", () => {
+    runCommand(button.dataset.command);
+  });
+});
 
-        if (!file) return;
+// ----------------------------------------
+// VOICE INPUT
+// ----------------------------------------
 
-        if (!file.type.startsWith("image/")) {
-            add("J.A.R.V.I.S: Please select an image file.", "ai");
-            imgInput.value = "";
-            return;
-        }
-
-        if (file.size > 8 * 1024 * 1024) {
-            add("J.A.R.V.I.S: Please select an image smaller than 8 MB.", "ai");
-            imgInput.value = "";
-            return;
-        }
-
-        const question =
-            input?.value.trim() ||
-            "Describe this image briefly.";
-
-        if (input) input.value = "";
-
-        add("YOU: [IMAGE] " + question, "user");
-
-        const thinking = add(
-            "J.A.R.V.I.S: Analyzing image...",
-            "ai"
-        );
-
-        camBtn.disabled = true;
-
-        try {
-            const base64 = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-
-                reader.onload = function () {
-                    const result = String(reader.result);
-                    resolve(result.split(",")[1]);
-                };
-
-                reader.onerror = function () {
-                    reject(new Error("Could not read the image."));
-                };
-
-                reader.readAsDataURL(file);
-            });
-
-            const contents = [{
-                role: "user",
-                parts: [
-                    { text: question },
-                    {
-                        inline_data: {
-                            mime_type: file.type,
-                            data: base64
-                        }
-                    }
-                ]
-            }];
-
-            const reply = await requestGemini(contents);
-
-            if (thinking) {
-                thinking.textContent = "J.A.R.V.I.S: " + reply;
-            }
-
-            speak(reply);
-
-        } catch (error) {
-            if (thinking) {
-                thinking.textContent =
-                    "J.A.R.V.I.S ERROR: " + error.message;
-            }
-
-        } finally {
-            camBtn.disabled = false;
-            imgInput.value = "";
-        }
-    });
-}
-
-// 12. VOICE INPUT
-const SpeechRecognition =
+$("mic").addEventListener("click", () => {
+  const SpeechAPI =
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
 
-if (SpeechRecognition && micBtn) {
-    const recognition = new SpeechRecognition();
-
-    recognition.lang = "en-IN";
-    recognition.interimResults = false;
-    recognition.continuous = false;
-
-    recognition.onstart = function () {
-        micBtn.textContent = "LISTENING...";
-        micBtn.disabled = true;
-
-        if (voiceStatus) {
-            voiceStatus.textContent = "● LISTENING";
-            voiceStatus.className = "on";
-        }
-    };
-
-    recognition.onresult = function (event) {
-        const transcript =
-            event.results?.[0]?.[0]?.transcript?.trim();
-
-        if (transcript) {
-            if (input) input.value = transcript;
-            sendMessage();
-        }
-    };
-
-    recognition.onerror = function (event) {
-        console.error("Voice error:", event.error);
-
-        add(
-            "J.A.R.V.I.S: Voice input error: " + event.error,
-            "ai"
-        );
-    };
-
-    recognition.onend = function () {
-        micBtn.textContent = "🎙️";
-        micBtn.disabled = false;
-
-        if (voiceStatus) {
-            voiceStatus.textContent = "● READY";
-            voiceStatus.className = "on";
-        }
-    };
-
-    micBtn.addEventListener("click", function () {
-        try {
-            recognition.start();
-        } catch (error) {
-            add(
-                "J.A.R.V.I.S: Voice recognition is already running.",
-                "ai"
-            );
-        }
-    });
-
-} else if (micBtn) {
-    micBtn.addEventListener("click", function () {
-        add(
-            "J.A.R.V.I.S: Voice recognition is not supported in this browser. Try a supported browser.",
-            "ai"
-        );
-    });
-
-    if (voiceStatus) {
-        voiceStatus.textContent = "● UNSUPPORTED";
-        voiceStatus.className = "off";
-    }
-}
-
-// 13. TEXT-TO-SPEECH
-function speak(text) {
-    if (!("speechSynthesis" in window)) return;
-
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-IN";
-    utterance.rate = 1.0;
-    utterance.pitch = 0.9;
-
-    const availableVoices =
-        window.speechSynthesis.getVoices();
-
-    const voice = availableVoices.find(v =>
-        v.lang.toLowerCase().startsWith("en-in")
-    ) || availableVoices.find(v =>
-        v.lang.toLowerCase().startsWith("en")
+  if (!SpeechAPI) {
+    reply(
+      "Voice recognition is unavailable in this browser. " +
+      "Try Chrome and allow microphone access."
     );
+    return;
+  }
 
-    if (voice) utterance.voice = voice;
+  if (listening && recognition) {
+    recognition.stop();
+    return;
+  }
 
-    window.speechSynthesis.speak(utterance);
-}
+  recognition = new SpeechAPI();
+  recognition.lang = "en-IN";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
 
-// 14. CLEAR LOCAL MEMORY
-if (clearBtn) {
-    clearBtn.addEventListener("click", function () {
-        const confirmed = confirm(
-            "Clear all saved JARVIS chat memory on this device?"
-        );
+  recognition.onstart = () => {
+    listening = true;
+    voiceStatus.textContent = "LISTENING";
+    setStatus("LISTENING, BOSS...");
+  };
 
-        if (!confirmed) return;
+  recognition.onresult = event => {
+    const spoken = event.results[0][0].transcript;
+    input.value = spoken;
+    runCommand(spoken);
+  };
 
-        MEMORY = [];
-        saveMemory();
+  recognition.onerror = event => {
+    setStatus("VOICE ERROR: " + event.error);
+  };
 
-        if (chat) chat.innerHTML = "";
+  recognition.onend = () => {
+    listening = false;
+    voiceStatus.textContent = "STANDBY";
+  };
 
-        add("SYSTEM: Local chat memory cleared.", "ai");
-    });
-}
-
-// 15. INITIAL STATUS
-if (memoryStatus) {
-    memoryStatus.textContent = "● LOCAL";
-    memoryStatus.className = "on";
-}
-
-if (aiStatus) {
-    aiStatus.textContent = API_KEY
-        ? "● READY"
-        : "● API KEY REQUIRED";
-
-    aiStatus.className = API_KEY ? "on" : "off";
-}
-
-if (connectionStatus) {
-    connectionStatus.textContent = navigator.onLine
-        ? "● ONLINE"
-        : "● OFFLINE";
-
-    connectionStatus.className = navigator.onLine
-        ? "on"
-        : "off";
-}
-
-window.addEventListener("online", function () {
-    if (connectionStatus) {
-        connectionStatus.textContent = "● ONLINE";
-        connectionStatus.className = "on";
-    }
+  recognition.start();
 });
 
-window.addEventListener("offline", function () {
-    if (connectionStatus) {
-        connectionStatus.textContent = "● OFFLINE";
-        connectionStatus.className = "off";
-    }
+// ----------------------------------------
+// STOP VOICE
+// ----------------------------------------
+
+$("stopVoice").addEventListener("click", () => {
+  if (recognition) recognition.stop();
+
+  if ("speechSynthesis" in window) {
+    speechSynthesis.cancel();
+  }
+
+  setStatus("VOICE STOPPED");
+  voiceStatus.textContent = "STANDBY";
 });
+
+// ----------------------------------------
+// CORE BUTTON
+// ----------------------------------------
+
+$("core").addEventListener("click", () => {
+  reply("All systems online, Boss. How may I assist you?");
+});
+
+// ----------------------------------------
+// CLEAR CHAT
+// ----------------------------------------
+
+$("clearChat").addEventListener("click", () => {
+  history = [];
+  saveHistory();
+
+  chat.replaceChildren();
+
+  reply("Conversation cleared.");
+});
+
+// ----------------------------------------
+// STARTUP
+// ----------------------------------------
+
+aiStatus.textContent = apiKey ? "CONFIGURED" : "LOCAL MODE";
+setStatus("SYSTEM ONLINE");
 
 console.log("J.A.R.V.I.S initialized.");
