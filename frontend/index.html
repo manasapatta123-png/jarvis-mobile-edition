@@ -1,127 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#030914">
-  <title>J.A.R.V.I.S | AI Assistant</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+"use strict";
 
-<div class="app">
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("msg");
+  const chat = document.getElementById("chat");
+  const status = document.getElementById("status");
 
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-icon">J</div>
-      <div>
-        <h1>J.A.R.V.I.S</h1>
-        <p>MOBILE INTELLIGENCE SYSTEM</p>
-      </div>
-    </div>
+  function reply(text, sender) {
+    const box = document.createElement("div");
+    box.className = sender === "user"
+      ? "message user-message"
+      : "message assistant-message";
 
-    <div class="online">
-      <span class="dot"></span>
-      ONLINE
-    </div>
-  </header>
+    const label = document.createElement("div");
+    label.className = "message-label";
+    label.textContent = sender === "user" ? "BOSS" : "J.A.R.V.I.S";
 
-  <main>
+    const p = document.createElement("p");
+    p.textContent = text;
 
-    <section class="hero">
-      <div class="core" id="core">
-        <div class="orbit orbit-one"></div>
-        <div class="orbit orbit-two"></div>
-        <div class="orbit orbit-three"></div>
-        <div class="core-center">J</div>
-      </div>
+    box.append(label, p);
+    chat.appendChild(box);
+    chat.scrollTop = chat.scrollHeight;
+  }
 
-      <h2>JUST A RATHER VERY INTELLIGENT SYSTEM</h2>
-      <p id="status">SYSTEM INITIALIZING...</p>
-      <div class="equalizer">
-        <span></span><span></span><span></span>
-        <span></span><span></span><span></span><span></span>
-      </div>
-    </section>
+  if (!form || !input || !chat) {
+    alert("JARVIS ERROR: Check index.html element IDs.");
+    return;
+  }
 
-    <section class="system-info">
-      <div class="info-box">
-        <span>AI CORE</span>
-        <strong id="aiStatus">READY</strong>
-      </div>
+  status.textContent = "READY";
 
-      <div class="info-box">
-        <span>VOICE</span>
-        <strong id="voiceStatus">STANDBY</strong>
-      </div>
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
 
-      <div class="info-box">
-        <span>MEMORY</span>
-        <strong>ACTIVE</strong>
-      </div>
-    </section>
+    const command = input.value.trim();
+    if (!command) return;
 
-    <section class="tools">
-      <button data-command="What time is it?">◷ TIME</button>
-      <button data-command="What is today's date?">▦ DATE</button>
-      <button data-command="Open Google">⌕ GOOGLE</button>
-      <button data-command="Open YouTube">▷ YOUTUBE</button>
-      <button data-command="Show my notes">▤ NOTES</button>
-      <button data-command="Help">? HELP</button>
-    </section>
+    input.value = "";
+    reply(command, "user");
 
-    <section class="chat-panel">
-      <div class="panel-title">
-        <span>COMMUNICATION TERMINAL</span>
-        <button id="clearChat" class="small-button">CLEAR</button>
-      </div>
+    const cmd = command.toLowerCase();
+    let answer;
 
-      <div id="chat" class="chat">
-        <div class="message jarvis">
-          <b>J.A.R.V.I.S</b>
-          <p>Systems online, Boss. Awaiting your command.</p>
-        </div>
-      </div>
+    if (cmd.includes("time")) {
+      answer = "The time is " + new Date().toLocaleTimeString();
+    } else if (cmd.includes("date")) {
+      answer = "Today's date is " + new Date().toLocaleDateString();
+    } else if (cmd.includes("youtube")) {
+      answer = "Opening YouTube, Boss.";
+      window.open("https://www.youtube.com/", "_blank");
+    } else if (cmd.includes("google")) {
+      answer = "Opening Google, Boss.";
+      window.open("https://www.google.com/", "_blank");
+    } else if (cmd.includes("instagram")) {
+      answer = "Opening Instagram, Boss.";
+      window.open("https://www.instagram.com/", "_blank");
+    } else if (cmd.includes("whatsapp")) {
+      answer = "Opening WhatsApp, Boss.";
+      window.open("https://wa.me/", "_blank");
+    } else if (cmd.includes("hello") || cmd.includes("hi")) {
+      answer = "Hello Boss! JARVIS command system is working.";
+    } else {
+      answer = "Command received, Boss. Basic system is working. AI connection is not enabled in this test.";
+    }
 
-      <form id="chatForm">
-        <input
-          id="message"
-          type="text"
-          placeholder="Enter command, Boss..."
-          autocomplete="off"
-          required
-        >
-        <button type="button" id="mic" aria-label="Voice input">🎙️</button>
-        <button type="submit" id="send" aria-label="Send">➤</button>
-      </form>
-
-      <button id="stopVoice" class="stop-button">■ STOP VOICE</button>
-    </section>
-
-    <section class="settings">
-      <h3>AI CONFIGURATION</h3>
-      <label for="apiKey">Gemini API key — personal testing only</label>
-      <input
-        type="password"
-        id="apiKey"
-        placeholder="Enter API key"
-        autocomplete="off"
-      >
-      <button id="saveKey">SAVE KEY ON THIS DEVICE</button>
-      <p class="warning">
-        Do not publish your API key in public repositories.
-        Browser storage is not a secure place for secrets.
-      </p>
-    </section>
-
-  </main>
-
-  <footer>
-    J.A.R.V.I.S MOBILE EDITION · PERSONAL ASSISTANT
-  </footer>
-
-</div>
-
-<script src="script.js"></script>
-</body>
-</html>
+    reply(answer, "assistant");
+  });
+});
