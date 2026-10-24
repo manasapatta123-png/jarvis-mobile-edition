@@ -1,80 +1,96 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#000000"><title>J.A.R.V.I.S | Mobile Edition</title>
+    <meta name="theme-color" content="#000000">
 
-<link rel="stylesheet" href="style.css">
+    <title>J.A.R.V.I.S | Mobile Edition</title>
 
-</head><body><header>
-    <h1>J.A.R.V.I.S</h1>
-    <p>MOBILE EDITION</p>
-</header>
+    <!-- CSS File -->
+    <link rel="stylesheet" href="style.css">
+</head>
 
-<main>
-    <section class="core-section">
-        <div class="core">
-            <div class="ring r1"></div>
-            <div class="ring r2"></div>
-            <div class="center"></div>
-        </div>
+<body>
 
-        <p class="core-text">CORE ACTIVE</p>
-    </section>
+    <header>
+        <h1>J.A.R.V.I.S</h1>
+        <p>MOBILE EDITION</p>
+    </header>
 
-    <section class="status">
-        <h2>SYSTEM STATUS</h2>
+    <main>
 
-        <div class="row">
-            <span>INTERFACE</span>
-            <b class="on">● ONLINE</b>
-        </div>
-
-        <div class="row">
-            <span>VOICE INPUT</span>
-            <b id="voiceStatus" class="off">○ READY</b>
-        </div>
-
-        <div class="row">
-            <span>AI BRAIN</span>
-            <b class="off">○ NOT CONNECTED</b>
-        </div>
-    </section>
-
-    <section class="assistant">
-        <h2>ASSISTANT TERMINAL</h2>
-
-        <div class="chat" id="chat" aria-live="polite">
-            <div class="msg ai">
-                J.A.R.V.I.S: Hello, Boss! Tap the microphone and speak.
+        <!-- JARVIS CORE -->
+        <section class="core-section">
+            <div class="core">
+                <div class="ring r1"></div>
+                <div class="ring r2"></div>
+                <div class="center"></div>
             </div>
-        </div>
 
-        <div class="input-area">
-            <input
-                type="text"
-                id="msg"
-                placeholder="Ask J.A.R.V.I.S..."
-                autocomplete="off"
-            >
+            <p class="core-text">CORE ACTIVE</p>
+        </section>
 
-            <button id="mic" type="button" title="Voice Input">
-                🎤
-            </button>
+        <!-- SYSTEM STATUS -->
+        <section class="status">
+            <h2>SYSTEM STATUS</h2>
 
-            <button id="send" type="button">
-                SEND
-            </button>
-        </div>
-    </section>
-</main>
+            <div class="row">
+                <span>INTERFACE</span>
+                <b class="on">● ONLINE</b>
+            </div>
 
-<footer>
-    <p>J.A.R.V.I.S MOBILE SYSTEM</p>
-    <p>PERSONAL ASSISTANT INTERFACE</p>
-</footer>
+            <div class="row">
+                <span>VOICE INPUT</span>
+                <b id="voiceStatus" class="off">○ READY</b>
+            </div>
 
-<script src="script.js"></script>
+            <div class="row">
+                <span>AI BRAIN</span>
+                <b id="aiStatus" class="off">○ NOT CONNECTED</b>
+            </div>
+        </section>
+
+        <!-- ASSISTANT CHAT -->
+        <section class="assistant">
+            <h2>ASSISTANT TERMINAL</h2>
+
+            <div class="chat" id="chat" aria-live="polite">
+                <div class="msg ai">
+                    J.A.R.V.I.S: Hello, Boss! Systems ready. Type a message or tap the microphone.
+                </div>
+            </div>
+
+            <!-- MESSAGE INPUT -->
+            <div class="input-area">
+                <input
+                    type="text"
+                    id="msg"
+                    placeholder="Ask J.A.R.V.I.S..."
+                    autocomplete="off"
+                    aria-label="Enter your message"
+                >
+
+                <button
+                    id="mic"
+                    type="button"
+                    title="Voice Input"
+                    aria-label="Voice input"
+                >🎤</button>
+
+                <button id="send" type="button">SEND</button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>J.A.R.V.I.S MOBILE SYSTEM</p>
+        <p>PERSONAL ASSISTANT INTERFACE</p>
+    </footer>
+
+    <!-- JavaScript File -->
+    <script src="script.js"></script>
 
 </body>
 </html>
