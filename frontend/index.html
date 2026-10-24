@@ -26,22 +26,17 @@
         <h2>SYSTEM STATUS</h2>
 
         <div class="row">
-            <span>AI CORE</span>
-            <b class="on">● ONLINE</b>
-        </div>
-
-        <div class="row">
             <span>INTERFACE</span>
             <b class="on">● ONLINE</b>
         </div>
 
         <div class="row">
-            <span>VOICE</span>
-            <b class="off">○ NOT CONNECTED</b>
+            <span>VOICE INPUT</span>
+            <b id="voiceStatus" class="off">○ READY</b>
         </div>
 
         <div class="row">
-            <span>REAL AI</span>
+            <span>AI BRAIN</span>
             <b class="off">○ NOT CONNECTED</b>
         </div>
     </section>
@@ -51,7 +46,7 @@
 
         <div class="chat" id="chat" aria-live="polite">
             <div class="msg ai">
-                J.A.R.V.I.S: Hello, Boss! System interface ready.
+                J.A.R.V.I.S: Hello, Boss! Tap the microphone and speak.
             </div>
         </div>
 
@@ -61,10 +56,15 @@
                 id="msg"
                 placeholder="Ask J.A.R.V.I.S..."
                 autocomplete="off"
-                aria-label="Enter your message"
             >
 
-            <button id="send" type="button">SEND</button>
+            <button id="mic" type="button" title="Voice Input">
+                🎤
+            </button>
+
+            <button id="send" type="button">
+                SEND
+            </button>
         </div>
     </section>
 </main>
