@@ -4,52 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#020b16">
 
-  <meta name="theme-color" content="#020811">
-
-  <title>J.A.R.V.I.S. Mobile Edition</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect"
-        href="https://fonts.gstatic.com" crossorigin>
-
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+  <title>J.A.R.V.I.S | Advanced AI</title>
 
   <link rel="stylesheet" href="style.css">
-
-  <!-- Prevent stale browser copies of the JavaScript file -->
-  <script>
-    window.JARVIS_BUILD = "2026-10-25-advanced";
-  </script>
-
-  <script src="script.js?v=20261025-2" defer></script>
 </head>
 
 <body>
+  <div class="scanline"></div>
 
-  <div class="app-container">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mini-reactor">J</div>
+      <div>
+        <h1>J.A.R.V.I.S</h1>
+        <small>ADVANCED MOBILE INTELLIGENCE</small>
+      </div>
+    </div>
 
-    <!-- HEADER -->
-    <header class="top-header">
-      <div class="brand">
-        <div class="brand-icon">J</div>
+    <div class="online-badge">
+      <span class="dot"></span>
+      <span id="systemStatus">INITIALIZING</span>
+    </div>
+  </header>
 
+  <main class="dashboard">
+
+    <section class="hero panel">
+      <div class="hero-heading">
         <div>
-          <h1>J.A.R.V.I.S.</h1>
-          <p>MOBILE INTELLIGENCE SYSTEM</p>
+          <p class="eyebrow">STARK INTERFACE // MOBILE EDITION</p>
+          <h2>Welcome back, <span>Boss.</span></h2>
+          <p id="subtitle">Your personal AI system is standing by.</p>
         </div>
+
+        <div class="clock" id="clock">00:00:00</div>
       </div>
 
-      <div class="system-status">
-        <span class="status-dot"></span>
-        <span id="status">SYSTEM ONLINE</span>
-      </div>
-    </header>
-
-    <!-- REACTOR -->
-    <section class="reactor-section">
-      <div class="reactor">
+      <div class="reactor-area">
         <div class="reactor-ring ring-one"></div>
         <div class="reactor-ring ring-two"></div>
         <div class="reactor-ring ring-three"></div>
@@ -57,193 +50,237 @@
         <div class="reactor-core">
           <span>J</span>
         </div>
+
+        <div class="reactor-label">CORE SYSTEM</div>
+        <div class="reactor-state" id="coreState">STANDBY</div>
       </div>
-
-      <h2>GOOD DAY, BOSS</h2>
-
-      <p class="subtitle">
-        YOUR PERSONAL AI SYSTEM IS READY
-      </p>
 
       <div class="system-grid">
         <div class="system-card">
-          <span>AI CORE</span>
-          <strong id="ai-status">NOT CONNECTED</strong>
+          <span class="status-light"></span>
+          <small>NETWORK</small>
+          <strong id="networkStatus">CHECKING</strong>
         </div>
 
         <div class="system-card">
-          <span>NETWORK</span>
-          <strong id="network-status">CHECKING</strong>
+          <span class="status-light"></span>
+          <small>AI ENGINE</small>
+          <strong id="aiStatus">NOT CONNECTED</strong>
         </div>
 
         <div class="system-card">
-          <span>VOICE</span>
-          <strong id="voice-status">CHECKING</strong>
+          <span class="status-light"></span>
+          <small>VOICE</small>
+          <strong id="voiceStatus">STANDBY</strong>
+        </div>
+
+        <div class="system-card">
+          <span class="status-light"></span>
+          <small>MEMORY</small>
+          <strong id="memoryStatus">READY</strong>
         </div>
       </div>
     </section>
 
-    <!-- QUICK ACTIONS -->
-    <section class="panel">
-      <div class="section-heading">
-        <span class="heading-indicator"></span>
-        QUICK COMMANDS
+    <section class="panel config-panel">
+      <div class="section-title">
+        <h3>AI CONNECTION</h3>
+        <span class="tag">CONFIGURATION</span>
       </div>
 
-      <div class="command-grid">
-        <button type="button" data-command="What time is it?">
-          <span>◷</span>
-          TIME
-        </button>
+      <p class="muted">
+        Enter your Gemini API key to enable AI responses.
+      </p>
 
-        <button type="button" data-command="What is today's date?">
-          <span>▦</span>
-          DATE
-        </button>
-
-        <button type="button" data-command="Hello JARVIS">
-          <span>◉</span>
-          GREET
-        </button>
-
-        <button type="button"
-                data-command="Tell me a useful technology fact">
-          <span>⌘</span>
-          TECH FACT
-        </button>
-      </div>
-    </section>
-
-    <!-- APP SHORTCUTS -->
-    <section class="panel">
-      <div class="section-heading">
-        <span class="heading-indicator"></span>
-        QUICK ACCESS
-      </div>
-
-      <div class="shortcut-grid">
-        <button type="button" data-action="youtube">
-          ▶ YouTube
-        </button>
-
-        <button type="button" data-action="google">
-          ◉ Google
-        </button>
-
-        <button type="button" data-action="instagram">
-          ◎ Instagram
-        </button>
-
-        <button type="button" data-action="whatsapp">
-          ◈ WhatsApp
-        </button>
-      </div>
-    </section>
-
-    <!-- CHAT -->
-    <section class="panel chat-panel">
-      <div class="chat-header">
-        <div>
-          <div class="section-heading">
-            <span class="heading-indicator"></span>
-            NEURAL INTERFACE
-          </div>
-
-          <p class="small-text">
-            TALK TO YOUR PERSONAL ASSISTANT
-          </p>
-        </div>
-
-        <button type="button" id="clear-btn"
-                class="clear-button">
-          CLEAR
-        </button>
-      </div>
-
-      <div id="chat"
-           class="chat-messages"
-           aria-live="polite">
-      </div>
-
-      <form id="chat-form" class="chat-form">
-        <button type="button"
-                id="mic-btn"
-                class="mic-button"
-                aria-label="Voice input">
-          🎙
-        </button>
-
+      <form id="keyForm">
         <input
-          type="text"
-          id="msg"
-          placeholder="Type your command, Boss..."
+          id="apiKey"
+          type="password"
+          placeholder="Paste Gemini API key"
           autocomplete="off"
           required
         >
 
-        <button type="submit" id="send">
-          SEND
+        <button class="primary-button" type="submit">
+          CONNECT AI
         </button>
       </form>
-    </section>
 
-    <!-- GEMINI API CONFIGURATION -->
-    <section class="panel">
-      <div class="section-heading">
-        <span class="heading-indicator"></span>
-        AI CONFIGURATION
+      <div class="button-row">
+        <button id="testAI" class="secondary-button" type="button">
+          TEST CONNECTION
+        </button>
+
+        <button id="removeKey" class="danger-button" type="button">
+          REMOVE KEY
+        </button>
       </div>
 
-      <p class="small-text">
-        Connect your Gemini API key to enable AI responses.
+      <p id="keyMessage" class="feedback" aria-live="polite">
+        AI connection required.
       </p>
 
-      <form id="key-form" class="key-form">
+      <p class="security-note">
+        Personal testing only: a key saved in browser storage is
+        not safe for a public website.
+      </p>
+    </section>
+
+    <section class="panel chat-panel">
+      <div class="section-title">
+        <h3>COMMAND CENTER</h3>
+        <span class="tag">AI INTERFACE</span>
+      </div>
+
+      <div class="quick-commands">
+        <button data-command="Hello JARVIS">INITIALIZE</button>
+        <button data-command="System diagnostics">DIAGNOSTICS</button>
+        <button data-command="Tell me a useful fact">QUICK FACT</button>
+        <button data-command="Help">HELP</button>
+      </div>
+
+      <div id="chatMessages"
+           class="chat-messages"
+           aria-live="polite">
+        <div class="message assistant-message">
+          <span class="message-label">J.A.R.V.I.S</span>
+          <div>
+            Systems initialized, Boss. Configure the AI connection
+            to begin an AI conversation.
+          </div>
+        </div>
+      </div>
+
+      <form id="chatForm" class="chat-form">
+        <button id="micButton"
+                class="icon-button"
+                type="button"
+                aria-label="Start voice input">🎙</button>
+
         <input
-          type="password"
-          id="apiKey"
-          placeholder="Enter Gemini API key"
+          id="messageInput"
+          type="text"
+          placeholder="Give me a command, Boss..."
           autocomplete="off"
-          spellcheck="false"
+          required
         >
 
-        <button type="submit" id="saveKey">
-          SAVE KEY
-        </button>
-
-        <button type="button" id="removeKey">
-          REMOVE
-        </button>
+        <button id="sendButton"
+                class="send-button"
+                type="submit">SEND</button>
       </form>
 
-      <p id="key-status" class="key-status" aria-live="polite">
-        API key has not been checked.
-      </p>
+      <div class="button-row">
+        <button id="speakToggle" class="secondary-button" type="button">
+          VOICE: ON
+        </button>
 
-      <div class="model-info">
-        <span>AI MODEL</span>
-        <strong>gemini-3.8-flash</strong>
+        <button id="clearChat" class="secondary-button" type="button">
+          CLEAR CHAT
+        </button>
+      </div>
+    </section>
+
+    <section class="panel command-panel">
+      <div class="section-title">
+        <h3>QUICK ACCESS</h3>
+        <span class="tag">LOCAL COMMANDS</span>
       </div>
 
-      <p class="warning-text">
-        Keep your API key private. Browser-based keys can be
-        exposed if this website is published publicly.
+      <div class="app-grid">
+        <button data-open="youtube"><span>▶</span>YOUTUBE</button>
+        <button data-open="google"><span>⌕</span>GOOGLE</button>
+        <button data-open="instagram"><span>◎</span>INSTAGRAM</button>
+        <button data-open="whatsapp"><span>◉</span>WHATSAPP</button>
+      </div>
+
+      <p class="muted">
+        These buttons open websites. Opening native Android apps
+        depends on your browser and device settings.
       </p>
     </section>
 
-    <!-- FOOTER -->
+    <section class="panel memory-panel">
+      <div class="section-title">
+        <h3>LONG-TERM MEMORY</h3>
+        <span class="tag">LOCAL STORAGE</span>
+      </div>
+
+      <form id="memoryForm">
+        <input
+          id="memoryInput"
+          type="text"
+          placeholder="Example: My favourite subject is computer science"
+          maxlength="300"
+          required
+        >
+
+        <button class="primary-button" type="submit">
+          SAVE MEMORY
+        </button>
+      </form>
+
+      <div id="memoryList" class="memory-list"></div>
+
+      <div class="button-row">
+        <button id="clearMemory" class="danger-button" type="button">
+          CLEAR MEMORY
+        </button>
+      </div>
+
+      <p class="muted">
+        Memories are stored on this browser. They are not
+        automatically sent to the AI unless you ask about them.
+      </p>
+    </section>
+
+    <section class="panel notes-panel">
+      <div class="section-title">
+        <h3>MISSION NOTES</h3>
+        <span class="tag">PERSONAL NOTES</span>
+      </div>
+
+      <form id="noteForm">
+        <input
+          id="noteInput"
+          type="text"
+          placeholder="Write a note or task..."
+          maxlength="500"
+          required
+        >
+
+        <button class="primary-button" type="submit">
+          SAVE NOTE
+        </button>
+      </form>
+
+      <div id="notesList" class="notes-list"></div>
+    </section>
+
+    <section class="panel diagnostics-panel">
+      <div class="section-title">
+        <h3>SYSTEM DIAGNOSTICS</h3>
+        <span class="tag">LIVE CHECKS</span>
+      </div>
+
+      <div id="diagnostics" class="diagnostics">
+        Loading diagnostics...
+      </div>
+
+      <button id="runDiagnostics"
+              class="secondary-button"
+              type="button">
+        RUN DIAGNOSTICS
+      </button>
+    </section>
+
     <footer>
-      <p>J.A.R.V.I.S. MOBILE EDITION</p>
-      <p>PERSONAL ASSISTANT INTERFACE</p>
+      <p>J.A.R.V.I.S MOBILE EDITION</p>
+      <small>PERSONAL AI INTERFACE · BUILT FOR BOSS</small>
     </footer>
 
-  </div>
+  </main>
 
-  <!-- BUILD CHECK -->
-  <script>
-    console.log("JARVIS HTML BUILD:", window.JARVIS_BUILD);
-    console.log("JARVIS script.js reference: script.js?v=20261025-2");
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
