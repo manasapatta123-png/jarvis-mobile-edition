@@ -1,235 +1,222 @@
 "use strict";
 
-/* =====================================
-   J.A.R.V.I.S. ADVANCED MOBILE EDITION
-   Gemini primary + Groq fallback
-   ===================================== */
+/* =========================================
+   J.A.R.V.I.S MOBILE EDITION
+   Gemini AI + Voice + Chat + Commands
+========================================= */
 
-const CONFIG = {
-  geminiModel: "gemini-3.8-flash",
-  geminiURL:
-    "https://generativelanguage.googleapis.com/v1beta/interactions",
+const $ = (selector) => document.querySelector(selector);
 
-  groqModel: "llama-3.3-70b-versatile",
-  groqURL:
-    "https://api.groq.com/openai/v1/chat/completions",
-
-  geminiStorage: "jarvis_gemini_key",
-  groqStorage: "jarvis_groq_key",
-  historyStorage: "jarvis_chat_history"
+const STORAGE = {
+  gemini: "jarvis_gemini_key",
+  groq: "jarvis_groq_key",
+  history: "jarvis_chat_history"
 };
 
-const $ = id => document.getElementById(id);
-
-let conversation = loadHistory();
-let isThinking = false;
-let isListening = false;
-let recognition = null;
-
-const el = {
-  chat: $("chat"),
-  form: $("chat-form"),
-  input: $("msg"),
-  send: $("send"),
-  mic: $("mic-btn"),
-  clear: $("clear-btn"),
-
-  status: $("status"),
-  aiStatus: $("ai-status"),
-  networkStatus: $("network-status"),
-  voiceStatus: $("voice-status"),
-
-  geminiInput: $("apiKey"),
-  geminiForm: $("key-form"),
-  geminiStatus: $("key-status"),
-
-  groqInput: $("groqApiKey"),
-  groqForm: $("groq-key-form"),
-  groqStatus: $("groq-key-status")
+const state = {
+  busy: false,
+  listening: false,
+  recognition: null
 };
 
-/* ========== STARTUP ========== */
+let conversation = [];
 
-function startJarvis() {
-  if (el.geminiInput) {
-    el.geminiInput.value =
-      localStorage.getItem(CONFIG.geminiStorage) || "";
+function getElement(...selectors) {
+  for (const selector of selectors) {
+    const element = $(selector);
+    if (element) return element;
   }
-
-  if (el.groqInput) {
-    el.groqInput.value =
-      localStorage.getItem(CONFIG.groqStorage) || "";
-  }
-
-  setupEvents();
-  setupVoice();
-  renderHistory();
-  updateNetwork();
-  updateAIStatus();
-
-  if (!conversation.length) {
-    addMessage(
-      "jarvis",
-      "Systems online, Boss. I am ready for your commands."
-    );
-  }
-
-  console.log("JARVIS initialized.");
+  return null;
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", startJarvis, {
-    once: true
-  });
-} else {
-  startJarvis();
+const chatForm = getElement("#chat-form", "#chatForm");
+const messageInput = getElement("#msg", "#message", "#user-input");
+const sendButton = getElement("#send", "#send-btn");
+const chatBox = getElement("#chat", "#chat-box", "#messages", "#chat-messages");
+const geminiInput = getElement("#apiKey", "#geminiApiKey");
+const groqInput = getElement("#groqApiKey");
+const keyForm = getElement("#key-form", "#keyForm");
+const keyStatus = getElement("#key-status", "#keyStatus");
+const micButton = getElement("#mic-btn", "#micBtn", "#mic");
+const clearButton = getElement("#clear-btn", "#clearBtn");
+const aiStatus = getElement("#ai-status", "#aiStatus");
+const networkStatus = getElement("#network-status", "#networkStatus");
+const voiceStatus = getElement("#voice-status", "#voiceStatus");
+const mainStatus = getElement("#status", "#jarvis-status");
+
+function setStatus(element, message) {
+  if (element) element.textContent = message;
 }
 
-/* ========== EVENT HANDLERS ========== */
-
-function setupEvents() {
-  el.form?.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const text = el.input?.value.trim();
-
-    if (!text || isThinking) return;
-
-    el.input.value = "";
-    await handleCommand(text);
-  });
-
-  el.geminiForm?.addEventListener("submit", event => {
-    event.preventDefault();
-    saveGeminiKey();
-  });
-
-  $("saveKey")?.addEventListener("click", saveGeminiKey);
-  $("removeKey")?.addEventListener("click", removeGeminiKey);
-
-  el.groqForm?.addEventListener("submit", event => {
-    event.preventDefault();
-    saveGroqKey();
-  });
-
-  $("removeGroqKey")?.addEventListener("click", removeGroqKey);
-
-  el.clear?.addEventListener("click", clearHistory);
-  el.mic?.addEventListener("click", toggleVoice);
-
-  document.querySelectorAll("[data-command]").forEach(button => {
-    button.addEventListener("click", () => {
-      if (!isThinking) handleCommand(button.dataset.command);
-    });
-  });
-
-  document.querySelectorAll("[data-action]").forEach(button => {
-    button.addEventListener("click", () => {
-      openShortcut(button.dataset.action);
-    });
-  });
-
-  window.addEventListener("online", updateNetwork);
-  window.addEventListener("offline", updateNetwork);
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[character]);
 }
 
-/* ========== COMMAND PROCESSING ========== */
-
-async function handleCommand(rawText) {
-  const prompt = String(rawText || "").trim();
-
-  if (!prompt || isThinking) return;
-
-  addMessage("user", prompt);
-
-  const local = localCommand(prompt);
-
-  if (local.handled) {
-    addMessage("jarvis", local.reply);
-
-    if (local.action) local.action();
-
-    return;
-  }
-
-  if (!getGeminiKey() && !getGroqKey()) {
-    addMessage(
-      "jarvis",
-      "Boss, please save a Gemini or Groq API key in AI Configuration."
-    );
-    return;
-  }
-
-  isThinking = true;
-  setStatus("PROCESSING");
-  showTyping(true);
-  setBusy(true);
-
+function saveHistory() {
   try {
-    let answer = "";
-    let provider = "";
+    localStorage.setItem(
+      STORAGE.history,
+      JSON.stringify(conversation.slice(-60))
+    );
+  } catch (error) {
+    console.warn("Could not save chat history:", error);
+  }
+}
 
-    if (getGeminiKey()) {
-      try {
-        answer = await askGemini(prompt);
-        provider = "GEMINI";
-      } catch (error) {
-        console.warn("Gemini request failed:", error.message);
+function addMessage(role, text, save = true) {
+  const message = {
+    role,
+    text: String(text),
+    time: Date.now()
+  };
 
-        if (!getGroqKey()) throw error;
+  conversation.push(message);
 
-        answer = await askGroq(prompt);
-        provider = "GROQ BACKUP";
+  if (chatBox) {
+    const bubble = document.createElement("div");
+    bubble.className =
+      role === "user" ? "message user-message" : "message bot-message";
+
+    bubble.dataset.role = role;
+
+    const label = document.createElement("strong");
+    label.textContent = role === "user" ? "YOU" : "J.A.R.V.I.S";
+
+    const content = document.createElement("div");
+    content.className = "message-text";
+    content.textContent = message.text;
+
+    bubble.append(label, content);
+    chatBox.appendChild(bubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  if (save) saveHistory();
+  return message;
+}
+
+function loadHistory() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
+
+    if (!Array.isArray(stored)) return;
+
+    conversation = stored.slice(-60);
+
+    if (chatBox) {
+      chatBox.innerHTML = "";
+
+      for (const message of conversation) {
+        const bubble = document.createElement("div");
+        bubble.className =
+          message.role === "user"
+            ? "message user-message"
+            : "message bot-message";
+
+        const label = document.createElement("strong");
+        label.textContent =
+          message.role === "user" ? "YOU" : "J.A.R.V.I.S";
+
+        const content = document.createElement("div");
+        content.className = "message-text";
+        content.textContent = message.text || "";
+
+        bubble.append(label, content);
+        chatBox.appendChild(bubble);
       }
-    } else {
-      answer = await askGroq(prompt);
-      provider = "GROQ";
-    }
 
-    addMessage("jarvis", answer);
-    speak(answer);
-
-    if (el.aiStatus) {
-      el.aiStatus.textContent = provider + " ONLINE";
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
   } catch (error) {
-    console.error("JARVIS request failed:", error);
-
-    addMessage(
-      "jarvis",
-      "Sorry, Boss. " + friendlyError(error)
-    );
-  } finally {
-    isThinking = false;
-    showTyping(false);
-    setBusy(false);
-    setStatus("SYSTEM ONLINE");
+    console.warn("Chat history could not be loaded:", error);
+    conversation = [];
   }
 }
 
-/* ========== GEMINI ========== */
+function getGeminiKey() {
+  return localStorage.getItem(STORAGE.gemini) || "";
+}
+
+function getGroqKey() {
+  return localStorage.getItem(STORAGE.groq) || "";
+}
+
+function saveGeminiKey(value) {
+  const key = value.trim();
+
+  if (key) localStorage.setItem(STORAGE.gemini, key);
+  else localStorage.removeItem(STORAGE.gemini);
+}
+
+function saveGroqKey(value) {
+  const key = value.trim();
+
+  if (key) localStorage.setItem(STORAGE.groq, key);
+  else localStorage.removeItem(STORAGE.groq);
+}
+
+/* =========================================
+   API ERROR HANDLING
+========================================= */
+
+async function readResponse(response) {
+  const raw = await response.text();
+  let data;
+
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    data = { raw };
+  }
+
+  if (!response.ok) {
+    const detail =
+      data?.error?.message ||
+      data?.message ||
+      data?.raw ||
+      `HTTP ${response.status}`;
+
+    throw new Error(`HTTP ${response.status}: ${detail}`);
+  }
+
+  return data;
+}
+
+/* =========================================
+   GEMINI API
+========================================= */
 
 async function askGemini(prompt) {
   const apiKey = getGeminiKey();
 
   if (!apiKey) {
-    throw new Error("Gemini API key is missing.");
+    throw new Error("Gemini API key missing. Save your API key first.");
   }
 
   const history = conversation
     .slice(-13, -1)
     .map(item => {
-      const role = item.sender === "user" ? "User" : "JARVIS";
-      return `${role}: ${item.text}`;
+      const who = item.role === "user" ? "User" : "JARVIS";
+      return `${who}: ${item.text}`;
     })
     .join("\n");
 
-  const input = history
-    ? `Recent conversation:\n${history}\n\nUser: ${prompt}`
-    : prompt;
+  const fullPrompt = [
+    "You are J.A.R.V.I.S., a helpful personal AI assistant.",
+    "Address the user as Boss.",
+    "Respond clearly and helpfully.",
+    history ? `Previous conversation:\n${history}` : "",
+    `Current message: ${prompt}`
+  ].filter(Boolean).join("\n\n");
 
-  const data = await requestJSON(
-    CONFIG.geminiURL,
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     {
       method: "POST",
       headers: {
@@ -237,82 +224,73 @@ async function askGemini(prompt) {
         "x-goog-api-key": apiKey
       },
       body: JSON.stringify({
-        model: CONFIG.geminiModel,
-        input,
-        system_instruction:
-          "You are J.A.R.V.I.S., a helpful personal AI assistant. Address the user as Boss. Answer accurately and clearly. Never claim that you opened an app or sent a message unless that action actually happened."
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: fullPrompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1200
+        }
       })
     }
   );
 
-  const answer = readGeminiAnswer(data);
+  const data = await readResponse(response);
+
+  const answer = data.candidates?.[0]?.content?.parts
+    ?.map(part => part.text || "")
+    .join("")
+    .trim();
 
   if (!answer) {
-    throw new Error("Gemini returned no text response.");
+    const reason = data.promptFeedback?.blockReason;
+    throw new Error(
+      reason
+        ? `Request blocked: ${reason}`
+        : "Gemini returned an empty response."
+    );
   }
 
   return answer;
 }
 
-function readGeminiAnswer(data) {
-  if (typeof data.output_text === "string" &&
-      data.output_text.trim()) {
-    return data.output_text.trim();
-  }
-
-  if (Array.isArray(data.steps)) {
-    const text = data.steps
-      .filter(step => step.type === "model_output")
-      .flatMap(step => step.content || [])
-      .filter(part => part.type === "text" && part.text)
-      .map(part => part.text)
-      .join("\n")
-      .trim();
-
-    if (text) return text;
-  }
-
-  if (Array.isArray(data.output)) {
-    return data.output
-      .flatMap(item => item.content || [])
-      .filter(part => part.type === "text" && part.text)
-      .map(part => part.text)
-      .join("\n")
-      .trim();
-  }
-
-  return "";
-}
-
-/* ========== GROQ BACKUP ========== */
+/* =========================================
+   OPTIONAL GROQ BACKUP API
+========================================= */
 
 async function askGroq(prompt) {
   const apiKey = getGroqKey();
 
   if (!apiKey) {
-    throw new Error("Groq API key is missing.");
+    throw new Error("Groq backup API key is not configured.");
   }
 
   const messages = [
     {
       role: "system",
       content:
-        "You are J.A.R.V.I.S., a helpful personal AI assistant. Address the user as Boss. Give accurate answers. Never pretend to have performed phone actions."
-    },
-
-    ...conversation.slice(-13, -1).map(item => ({
-      role: item.sender === "user" ? "user" : "assistant",
-      content: item.text
-    })),
-
-    {
-      role: "user",
-      content: prompt
+        "You are J.A.R.V.I.S., a helpful personal AI assistant. " +
+        "Address the user as Boss. Answer clearly."
     }
   ];
 
-  const data = await requestJSON(
-    CONFIG.groqURL,
+  for (const item of conversation.slice(-12, -1)) {
+    messages.push({
+      role: item.role === "user" ? "user" : "assistant",
+      content: item.text
+    });
+  }
+
+  messages.push({
+    role: "user",
+    content: prompt
+  });
+
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
     {
       method: "POST",
       headers: {
@@ -320,484 +298,410 @@ async function askGroq(prompt) {
         "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: CONFIG.groqModel,
+        model: "llama-3.3-70b-versatile",
         messages,
         temperature: 0.7,
-        max_tokens: 900
+        max_tokens: 1200
       })
     }
   );
 
-  const answer =
-    data?.choices?.[0]?.message?.content?.trim();
+  const data = await readResponse(response);
+  const answer = data.choices?.[0]?.message?.content?.trim();
 
   if (!answer) {
-    throw new Error("Groq returned no text response.");
+    throw new Error("Groq returned an empty response.");
   }
 
   return answer;
 }
 
-/* ========== REQUEST + ERROR DETAILS ========== */
+/* =========================================
+   AI WITH BACKUP
+========================================= */
 
-async function requestJSON(url, options) {
-  const controller = new AbortController();
+async function getAIResponse(prompt) {
+  const errors = [];
 
-  const timer = setTimeout(() => {
-    controller.abort();
-  }, 45000);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-
-    const raw = await response.text();
-
-    let data;
-
+  if (getGeminiKey()) {
     try {
-      data = JSON.parse(raw);
-    } catch {
-      data = { message: raw };
+      setStatus(aiStatus, "GEMINI CONNECTING...");
+      return await askGemini(prompt);
+    } catch (error) {
+      errors.push(`Gemini: ${error.message}`);
+      console.error("Gemini request failed:", error);
     }
+  }
 
-    if (!response.ok) {
-      const details =
-        data?.error?.message ||
-        data?.error?.code ||
-        data?.message ||
-        `HTTP ${response.status}`;
-
-      const error = new Error(
-        `${response.status}: ${details}`
-      );
-
-      error.status = response.status;
-      error.provider = url.includes("generativelanguage")
-        ? "Gemini"
-        : "Groq";
-
-      console.error("API error details:", {
-        provider: error.provider,
-        status: response.status,
-        details: data
-      });
-
-      throw error;
+  if (getGroqKey()) {
+    try {
+      setStatus(aiStatus, "BACKUP AI CONNECTING...");
+      return await askGroq(prompt);
+    } catch (error) {
+      errors.push(`Groq: ${error.message}`);
+      console.error("Groq request failed:", error);
     }
-
-    return data;
-  } catch (error) {
-    if (error.name === "AbortError") {
-      throw new Error(
-        "Request timed out. Check your internet connection."
-      );
-    }
-
-    throw error;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-function friendlyError(error) {
-  const message = error?.message || "Unknown error.";
-
-  if (/429|quota|rate.limit|resource_exhausted/i.test(message)) {
-    return "AI quota or rate limit reached. Check your provider's usage limits and try again later.";
   }
 
-  if (/401|403/.test(message)) {
-    return "API key invalid or permission denied. Check the key and project settings.";
+  if (errors.length) {
+    throw new Error(errors.join("\n\n"));
   }
 
-  if (/400/.test(message)) {
-    return "API request rejected. Details: " + message;
-  }
-
-  if (/404/.test(message)) {
-    return "Model or endpoint not found. Details: " + message;
-  }
-
-  if (/failed to fetch|networkerror/i.test(message)) {
-    return "Network request failed. Check your internet connection.";
-  }
-
-  return message;
-}
-
-/* ========== API KEY STORAGE ========== */
-
-function getGeminiKey() {
-  return (
-    el.geminiInput?.value.trim() ||
-    localStorage.getItem(CONFIG.geminiStorage) ||
-    ""
+  throw new Error(
+    "No AI API key configured. Save a Gemini key in AI Configuration."
   );
 }
 
-function getGroqKey() {
-  return (
-    el.groqInput?.value.trim() ||
-    localStorage.getItem(CONFIG.groqStorage) ||
-    ""
-  );
+/* =========================================
+   LOCAL COMMANDS
+========================================= */
+
+function localCommand(prompt) {
+  const text = prompt.toLowerCase().trim();
+
+  if (/^(hi|hello|hey|hai|jarvis|wake up)[!. ]*$/.test(text)) {
+    return "Systems online, Boss. J.A.R.V.I.S. is ready.";
+  }
+
+  if (text.includes("your name") || text.includes("who are you")) {
+    return "I am J.A.R.V.I.S., your personal AI assistant, Boss.";
+  }
+
+  if (text.includes("what time") || text === "time") {
+    return `The current time is ${new Date().toLocaleTimeString()}.`;
+  }
+
+  if (text.includes("today's date") || text === "date" ||
+      text.includes("what is the date")) {
+    return `Today's date is ${new Date().toLocaleDateString()}.`;
+  }
+
+  if (text.includes("open youtube")) {
+    openWebsite("https://www.youtube.com");
+    return "Opening YouTube, Boss.";
+  }
+
+  if (text.includes("open google")) {
+    openWebsite("https://www.google.com");
+    return "Opening Google, Boss.";
+  }
+
+  if (text.includes("open instagram")) {
+    openWebsite("https://www.instagram.com");
+    return "Opening Instagram, Boss.";
+  }
+
+  if (text.includes("open whatsapp")) {
+    openWebsite("https://wa.me/");
+    return "Opening WhatsApp, Boss.";
+  }
+
+  if (text.includes("open facebook")) {
+    openWebsite("https://www.facebook.com");
+    return "Opening Facebook, Boss.";
+  }
+
+  if (text.includes("open settings")) {
+    return "Boss, Android Settings cannot be opened directly by this webpage. Use your phone's Settings app.";
+  }
+
+  return null;
 }
 
-function saveGeminiKey(event) {
-  event?.preventDefault();
-
-  const key = el.geminiInput?.value.trim();
-
-  if (!key) {
-    setKeyStatus("Enter your Gemini API key.", false);
-    return;
-  }
-
-  localStorage.setItem(CONFIG.geminiStorage, key);
-  setKeyStatus("Gemini key saved in this browser.", true);
-  updateAIStatus();
+function openWebsite(url) {
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function removeGeminiKey() {
-  localStorage.removeItem(CONFIG.geminiStorage);
-
-  if (el.geminiInput) el.geminiInput.value = "";
-
-  setKeyStatus("Gemini key removed.", true);
-  updateAIStatus();
-}
-
-function saveGroqKey() {
-  const key = el.groqInput?.value.trim();
-
-  if (!key) {
-    if (el.groqStatus) {
-      el.groqStatus.textContent = "Enter your Groq API key.";
-    }
-    return;
-  }
-
-  localStorage.setItem(CONFIG.groqStorage, key);
-
-  if (el.groqStatus) {
-    el.groqStatus.textContent = "Groq backup key saved.";
-  }
-
-  updateAIStatus();
-}
-
-function removeGroqKey() {
-  localStorage.removeItem(CONFIG.groqStorage);
-
-  if (el.groqInput) el.groqInput.value = "";
-
-  if (el.groqStatus) {
-    el.groqStatus.textContent = "Groq key removed.";
-  }
-
-  updateAIStatus();
-}
-
-function setKeyStatus(message, success) {
-  if (!el.geminiStatus) return;
-
-  el.geminiStatus.textContent = message;
-  el.geminiStatus.style.color =
-    success ? "#00e6a8" : "#ff667a";
-}
-
-/* ========== LOCAL COMMANDS ========== */
-
-function localCommand(raw) {
-  const command = raw.toLowerCase().trim();
-
-  if (/^(hi|hello|hey|hi jarvis|hello jarvis)[!. ]*$/.test(command)) {
-    return {
-      handled: true,
-      reply: "Hello, Boss. All systems are standing by."
-    };
-  }
-
-  if (command === "who are you" ||
-      command.includes("your name")) {
-    return {
-      handled: true,
-      reply: "I am J.A.R.V.I.S., your personal mobile assistant."
-    };
-  }
-
-  if (/\btime\b/.test(command)) {
-    return {
-      handled: true,
-      reply: "The current time is " +
-        new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit"
-        }) + "."
-    };
-  }
-
-  if (/\bdate\b|\btoday\b/.test(command)) {
-    return {
-      handled: true,
-      reply: "Today is " +
-        new Date().toLocaleDateString([], {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric"
-        }) + "."
-    };
-  }
-
-  const actions = [
-    ["open youtube", "youtube"],
-    ["open google", "google"],
-    ["open instagram", "instagram"],
-    ["open whatsapp", "whatsapp"]
-  ];
-
-  for (const [phrase, action] of actions) {
-    if (command === phrase) {
-      return {
-        handled: true,
-        reply: `Opening ${action}, Boss.`,
-        action: () => openShortcut(action)
-      };
-    }
-  }
-
-  return { handled: false };
-}
-
-/* ========== WEBSITE SHORTCUTS ========== */
-
-function openShortcut(action) {
-  const urls = {
-    youtube: "https://www.youtube.com/",
-    google: "https://www.google.com/",
-    instagram: "https://www.instagram.com/",
-    whatsapp: "https://web.whatsapp.com/"
-  };
-
-  if (urls[action]) {
-    window.open(urls[action], "_blank", "noopener,noreferrer");
-  }
-}
-
-/* ========== VOICE RECOGNITION ========== */
-
-function setupVoice() {
-  const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    if (el.voiceStatus) {
-      el.voiceStatus.textContent = "UNSUPPORTED";
-    }
-    return;
-  }
-
-  recognition = new SpeechRecognition();
-  recognition.lang = "en-IN";
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  recognition.onstart = () => {
-    isListening = true;
-    if (el.voiceStatus) el.voiceStatus.textContent = "LISTENING";
-    setStatus("LISTENING");
-  };
-
-  recognition.onresult = async event => {
-    const text = event.results?.[0]?.[0]?.transcript?.trim();
-
-    if (text && !isThinking) {
-      if (el.input) el.input.value = text;
-      await handleCommand(text);
-    }
-  };
-
-  recognition.onerror = event => {
-    console.warn("Voice recognition error:", event.error);
-
-    if (el.voiceStatus) {
-      el.voiceStatus.textContent = "VOICE ERROR";
-    }
-  };
-
-  recognition.onend = () => {
-    isListening = false;
-
-    if (el.voiceStatus) el.voiceStatus.textContent = "READY";
-
-    if (!isThinking) setStatus("SYSTEM ONLINE");
-  };
-
-  if (el.voiceStatus) el.voiceStatus.textContent = "READY";
-}
-
-function toggleVoice() {
-  if (!recognition) {
-    addMessage(
-      "jarvis",
-      "Voice recognition is not supported by this browser."
-    );
-    return;
-  }
-
-  try {
-    if (isListening) recognition.stop();
-    else recognition.start();
-  } catch (error) {
-    console.warn(error);
-  }
-}
-
-/* ========== VOICE OUTPUT ========== */
+/* =========================================
+   SPEECH OUTPUT
+========================================= */
 
 function speak(text) {
-  if (!("speechSynthesis" in window)) return;
+  if (!("speechSynthesis" in window)) {
+    setStatus(voiceStatus, "VOICE NOT SUPPORTED");
+    return;
+  }
 
   window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
+  const utterance = new SpeechSynthesisUtterance(String(text));
   utterance.lang = "en-IN";
   utterance.rate = 1;
-  utterance.pitch = 0.9;
+  utterance.pitch = 1;
+
+  utterance.onstart = () => setStatus(voiceStatus, "SPEAKING");
+  utterance.onend = () => setStatus(voiceStatus, "READY");
+  utterance.onerror = () => setStatus(voiceStatus, "VOICE ERROR");
 
   window.speechSynthesis.speak(utterance);
 }
 
-/* ========== CHAT UI ========== */
+/* =========================================
+   SPEECH RECOGNITION
+========================================= */
 
-function addMessage(sender, text) {
-  const item = {
-    sender,
-    text,
-    time: Date.now()
+function setupVoiceRecognition() {
+  const Recognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!Recognition) {
+    setStatus(voiceStatus, "VOICE INPUT NOT SUPPORTED");
+    if (micButton) micButton.disabled = true;
+    return;
+  }
+
+  state.recognition = new Recognition();
+  state.recognition.lang = "en-IN";
+  state.recognition.continuous = false;
+  state.recognition.interimResults = false;
+
+  state.recognition.onstart = () => {
+    state.listening = true;
+    setStatus(voiceStatus, "LISTENING...");
+    if (micButton) micButton.textContent = "Listening...";
   };
 
-  conversation.push(item);
+  state.recognition.onresult = event => {
+    const transcript =
+      event.results?.[0]?.[0]?.transcript?.trim() || "";
 
-  if (conversation.length > 80) {
-    conversation = conversation.slice(-80);
+    if (transcript && messageInput) {
+      messageInput.value = transcript;
+
+      if (chatForm) {
+        chatForm.requestSubmit();
+      } else {
+        sendMessage(transcript);
+      }
+    }
+  };
+
+  state.recognition.onerror = event => {
+    setStatus(voiceStatus, `VOICE ERROR: ${event.error}`);
+  };
+
+  state.recognition.onend = () => {
+    state.listening = false;
+    setStatus(voiceStatus, "READY");
+    if (micButton) micButton.textContent = "🎙️";
+  };
+}
+
+function toggleMicrophone() {
+  if (!state.recognition) {
+    addMessage("assistant", "Voice recognition is not supported in this browser.");
+    return;
   }
 
-  saveHistory();
-  appendMessage(item);
-}
-
-function appendMessage(item) {
-  if (!el.chat) return;
-
-  const row = document.createElement("div");
-
-  row.className = item.sender === "user"
-    ? "message user-message"
-    : "message jarvis-message";
-
-  const label = document.createElement("div");
-  label.className = "message-label";
-  label.textContent = item.sender === "user"
-    ? "YOU"
-    : "J.A.R.V.I.S.";
-
-  const bubble = document.createElement("div");
-  bubble.className = "message-bubble";
-  bubble.textContent = item.text;
-
-  row.append(label, bubble);
-  el.chat.appendChild(row);
-  el.chat.scrollTop = el.chat.scrollHeight;
-}
-
-function renderHistory() {
-  if (!el.chat) return;
-
-  el.chat.replaceChildren();
-  conversation.forEach(appendMessage);
-}
-
-function showTyping(show) {
-  if (!el.chat) return;
-
-  $("typing-indicator")?.remove();
-
-  if (!show) return;
-
-  const indicator = document.createElement("div");
-  indicator.id = "typing-indicator";
-  indicator.className = "message jarvis-message";
-  indicator.textContent = "J.A.R.V.I.S. is thinking...";
-
-  el.chat.appendChild(indicator);
-  el.chat.scrollTop = el.chat.scrollHeight;
-}
-
-function clearHistory() {
-  conversation = [];
-  saveHistory();
-
-  if (el.chat) el.chat.replaceChildren();
-
-  addMessage("jarvis", "Conversation cleared, Boss.");
-}
-
-function setBusy(busy) {
-  if (el.input) el.input.disabled = busy;
-  if (el.send) el.send.disabled = busy;
-}
-
-function setStatus(message) {
-  if (el.status) el.status.textContent = message;
-}
-
-function updateNetwork() {
-  if (el.networkStatus) {
-    el.networkStatus.textContent =
-      navigator.onLine ? "ONLINE" : "OFFLINE";
-  }
-}
-
-function updateAIStatus() {
-  if (!el.aiStatus) return;
-
-  if (getGeminiKey() && getGroqKey()) {
-    el.aiStatus.textContent = "DUAL AI CONFIGURED";
-  } else if (getGeminiKey()) {
-    el.aiStatus.textContent = "GEMINI CONFIGURED";
-  } else if (getGroqKey()) {
-    el.aiStatus.textContent = "GROQ CONFIGURED";
+  if (state.listening) {
+    state.recognition.stop();
   } else {
-    el.aiStatus.textContent = "NOT CONNECTED";
+    try {
+      state.recognition.start();
+    } catch (error) {
+      console.warn("Microphone error:", error);
+      setStatus(voiceStatus, "CHECK MICROPHONE PERMISSION");
+    }
   }
 }
 
-/* ========== CHAT HISTORY STORAGE ========== */
+/* =========================================
+   CHAT HANDLER
+========================================= */
 
-function loadHistory() {
+async function sendMessage(rawPrompt) {
+  const prompt = String(rawPrompt || "").trim();
+
+  if (!prompt || state.busy) return;
+
+  state.busy = true;
+
+  if (sendButton) sendButton.disabled = true;
+  if (messageInput) messageInput.value = "";
+
+  addMessage("user", prompt);
+  setStatus(mainStatus, "PROCESSING...");
+  setStatus(networkStatus, navigator.onLine ? "ONLINE" : "OFFLINE");
+
   try {
-    const raw = localStorage.getItem(CONFIG.historyStorage);
-    const parsed = raw ? JSON.parse(raw) : [];
+    const localAnswer = localCommand(prompt);
 
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
+    if (localAnswer !== null) {
+      addMessage("assistant", localAnswer);
+      speak(localAnswer);
+    } else {
+      if (!navigator.onLine) {
+        throw new Error("Internet connection unavailable.");
+      }
 
-function saveHistory() {
-  try {
-    localStorage.setItem(
-      CONFIG.historyStorage,
-      JSON.stringify(conversation)
-    );
+      const answer = await getAIResponse(prompt);
+      addMessage("assistant", answer);
+      speak(answer);
+    }
+
+    setStatus(mainStatus, "CORE ACTIVE");
+    setStatus(aiStatus, "ONLINE");
   } catch (error) {
-    console.warn("Chat history could not be saved:", error);
+    console.error("JARVIS error:", error);
+
+    const message =
+      `Boss, AI request failed.\n\n${error.message}`;
+
+    addMessage("assistant", message);
+    setStatus(mainStatus, "AI ERROR");
+    setStatus(aiStatus, "CHECK API");
+  } finally {
+    state.busy = false;
+    if (sendButton) sendButton.disabled = false;
+
+    if (messageInput) messageInput.focus();
   }
 }
+
+/* =========================================
+   EVENT LISTENERS
+========================================= */
+
+if (chatForm) {
+  chatForm.addEventListener("submit", event => {
+    event.preventDefault();
+    sendMessage(messageInput?.value || "");
+  });
+} else if (sendButton) {
+  sendButton.addEventListener("click", event => {
+    event.preventDefault();
+    sendMessage(messageInput?.value || "");
+  });
+}
+
+if (messageInput) {
+  messageInput.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey && !chatForm) {
+      event.preventDefault();
+      sendMessage(messageInput.value);
+    }
+  });
+}
+
+if (micButton) {
+  micButton.addEventListener("click", toggleMicrophone);
+}
+
+if (clearButton) {
+  clearButton.addEventListener("click", () => {
+    conversation = [];
+    saveHistory();
+
+    if (chatBox) chatBox.innerHTML = "";
+
+    addMessage("assistant", "Chat cleared, Boss.");
+  });
+}
+
+if (keyForm) {
+  keyForm.addEventListener("submit", event => {
+    event.preventDefault();
+
+    if (geminiInput) saveGeminiKey(geminiInput.value);
+    if (groqInput) saveGroqKey(groqInput.value);
+
+    setStatus(keyStatus, "API KEY SAVED");
+    setStatus(aiStatus, "READY");
+
+    if (geminiInput) geminiInput.value = "";
+    if (groqInput) groqInput.value = "";
+  });
+}
+
+/* Support separate key-save buttons if the HTML uses them. */
+const saveKeyButton = getElement("#saveKey", "#save-key");
+
+if (saveKeyButton && !keyForm) {
+  saveKeyButton.addEventListener("click", event => {
+    event.preventDefault();
+
+    if (geminiInput) saveGeminiKey(geminiInput.value);
+    if (groqInput) saveGroqKey(groqInput.value);
+
+    if (geminiInput) geminiInput.value = "";
+    if (groqInput) groqInput.value = "";
+
+    setStatus(keyStatus, "API KEY SAVED");
+  });
+}
+
+const removeGeminiButton = getElement("#removeKey", "#remove-gemini-key");
+
+if (removeGeminiButton) {
+  removeGeminiButton.addEventListener("click", event => {
+    event.preventDefault();
+    localStorage.removeItem(STORAGE.gemini);
+    setStatus(keyStatus, "GEMINI KEY REMOVED");
+  });
+}
+
+const removeGroqButton = getElement("#removeGroqKey", "#remove-groq-key");
+
+if (removeGroqButton) {
+  removeGroqButton.addEventListener("click", event => {
+    event.preventDefault();
+    localStorage.removeItem(STORAGE.groq);
+    setStatus(keyStatus, "GROQ KEY REMOVED");
+  });
+}
+
+document.querySelectorAll("[data-command]").forEach(button => {
+  button.addEventListener("click", () => {
+    const command = button.dataset.command || button.textContent;
+    sendMessage(command);
+  });
+});
+
+document.querySelectorAll("[data-action]").forEach(button => {
+  button.addEventListener("click", () => {
+    const action = button.dataset.action;
+
+    if (action === "clear") {
+      clearButton?.click();
+    } else if (action === "mic") {
+      toggleMicrophone();
+    } else if (action === "stop-voice") {
+      window.speechSynthesis?.cancel();
+    }
+  });
+});
+
+window.addEventListener("online", () => {
+  setStatus(networkStatus, "ONLINE");
+});
+
+window.addEventListener("offline", () => {
+  setStatus(networkStatus, "OFFLINE");
+});
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+function initializeJarvis() {
+  loadHistory();
+  setupVoiceRecognition();
+
+  setStatus(mainStatus, "CORE ACTIVE");
+  setStatus(networkStatus, navigator.onLine ? "ONLINE" : "OFFLINE");
+  setStatus(aiStatus, getGeminiKey() || getGroqKey() ? "READY" : "KEY REQUIRED");
+  setStatus(voiceStatus, "READY");
+
+  if (!conversation.length) {
+    addMessage(
+      "assistant",
+      "J.A.R.V.I.S. Mobile Edition online, Boss. How may I assist you?"
+    );
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeJarvis);
+} else {
+  initializeJarvis();
+         }
