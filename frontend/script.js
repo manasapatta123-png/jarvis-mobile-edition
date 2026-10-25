@@ -6,7 +6,7 @@ const sendBtn = document.getElementById("send");
 
 // Enter your Gemini API key here.
 // Never publish this file with your API key exposed.
-const API_KEY = "PASTE_YOUR_NEW_API_KEY_HERE";
+const API_KEY = "AQ.Ab8RN6Ko8iH0Z1zw12-kq0FtoA1u-KLEeZ9T8CTaxwqNX_iI5A";
 
 // Verify the exact model ID available to your API key.
 const MODEL = "gemini-3.6-flash";
