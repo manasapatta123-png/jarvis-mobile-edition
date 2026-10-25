@@ -1,286 +1,89 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#020b16">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#02070d">
+<title>J.A.R.V.I.S | Mobile Edition</title>
 
-  <title>J.A.R.V.I.S | Advanced AI</title>
+<link rel="stylesheet" href="style.css">
 
-  <link rel="stylesheet" href="style.css">
-</head>
+</head><body><header>
+    <h1>J.A.R.V.I.S</h1>
+    <p>MOBILE EDITION</p>
+</header>
 
-<body>
-  <div class="scanline"></div>
+<main>
 
-  <header class="topbar">
-    <div class="brand">
-      <div class="mini-reactor">J</div>
-      <div>
-        <h1>J.A.R.V.I.S</h1>
-        <small>ADVANCED MOBILE INTELLIGENCE</small>
-      </div>
-    </div>
-
-    <div class="online-badge">
-      <span class="dot"></span>
-      <span id="systemStatus">INITIALIZING</span>
-    </div>
-  </header>
-
-  <main class="dashboard">
-
-    <section class="hero panel">
-      <div class="hero-heading">
-        <div>
-          <p class="eyebrow">STARK INTERFACE // MOBILE EDITION</p>
-          <h2>Welcome back, <span>Boss.</span></h2>
-          <p id="subtitle">Your personal AI system is standing by.</p>
+    <!-- AI Core Animation -->
+    <section class="core-section">
+        <div class="core">
+            <div class="ring r1"></div>
+            <div class="ring r2"></div>
+            <div class="center"></div>
         </div>
 
-        <div class="clock" id="clock">00:00:00</div>
-      </div>
-
-      <div class="reactor-area">
-        <div class="reactor-ring ring-one"></div>
-        <div class="reactor-ring ring-two"></div>
-        <div class="reactor-ring ring-three"></div>
-
-        <div class="reactor-core">
-          <span>J</span>
-        </div>
-
-        <div class="reactor-label">CORE SYSTEM</div>
-        <div class="reactor-state" id="coreState">STANDBY</div>
-      </div>
-
-      <div class="system-grid">
-        <div class="system-card">
-          <span class="status-light"></span>
-          <small>NETWORK</small>
-          <strong id="networkStatus">CHECKING</strong>
-        </div>
-
-        <div class="system-card">
-          <span class="status-light"></span>
-          <small>AI ENGINE</small>
-          <strong id="aiStatus">NOT CONNECTED</strong>
-        </div>
-
-        <div class="system-card">
-          <span class="status-light"></span>
-          <small>VOICE</small>
-          <strong id="voiceStatus">STANDBY</strong>
-        </div>
-
-        <div class="system-card">
-          <span class="status-light"></span>
-          <small>MEMORY</small>
-          <strong id="memoryStatus">READY</strong>
-        </div>
-      </div>
+        <p class="core-text">CORE ACTIVE</p>
     </section>
 
-    <section class="panel config-panel">
-      <div class="section-title">
-        <h3>AI CONNECTION</h3>
-        <span class="tag">CONFIGURATION</span>
-      </div>
+    <!-- System Status -->
+    <section class="status">
+        <h2>SYSTEM STATUS</h2>
 
-      <p class="muted">
-        Enter your Gemini API key to enable AI responses.
-      </p>
+        <div class="row">
+            <span>AI CORE</span>
+            <b class="off" id="aiStatus">○ WAITING</b>
+        </div>
 
-      <form id="keyForm">
+        <div class="row">
+            <span>NETWORK</span>
+            <b class="off" id="networkStatus">○ CHECKING</b>
+        </div>
+
+        <div class="row">
+            <span>VOICE</span>
+            <b class="off" id="voiceStatus">○ LOCKED</b>
+        </div>
+
+        <div class="row">
+            <span>MEMORY</span>
+            <b class="off" id="memoryStatus">○ LOCKED</b>
+        </div>
+    </section>
+
+    <!-- Chat Messages -->
+    <section
+        class="chat"
+        id="chat"
+        role="log"
+        aria-live="polite"
+        aria-label="JARVIS conversation"
+    >
+        <div class="message jarvis-message">
+            J.A.R.V.I.S: Welcome, Boss. Systems initializing...
+        </div>
+    </section>
+
+    <!-- User Input -->
+    <form class="input-area" id="chatForm">
         <input
-          id="apiKey"
-          type="password"
-          placeholder="Paste Gemini API key"
-          autocomplete="off"
-          required
+            type="text"
+            id="msg"
+            placeholder="Ask J.A.R.V.I.S..."
+            autocomplete="off"
+            aria-label="Enter your message"
+            required
         >
 
-        <button class="primary-button" type="submit">
-          CONNECT AI
-        </button>
-      </form>
+        <button type="submit" id="send">SEND</button>
+    </form>
 
-      <div class="button-row">
-        <button id="testAI" class="secondary-button" type="button">
-          TEST CONNECTION
-        </button>
+</main>
 
-        <button id="removeKey" class="danger-button" type="button">
-          REMOVE KEY
-        </button>
-      </div>
+<footer>
+    <p>J.A.R.V.I.S MOBILE EDITION</p>
+    <p>PERSONAL AI INTERFACE</p>
+</footer>
 
-      <p id="keyMessage" class="feedback" aria-live="polite">
-        AI connection required.
-      </p>
+<script src="script.js" defer></script>
 
-      <p class="security-note">
-        Personal testing only: a key saved in browser storage is
-        not safe for a public website.
-      </p>
-    </section>
-
-    <section class="panel chat-panel">
-      <div class="section-title">
-        <h3>COMMAND CENTER</h3>
-        <span class="tag">AI INTERFACE</span>
-      </div>
-
-      <div class="quick-commands">
-        <button data-command="Hello JARVIS">INITIALIZE</button>
-        <button data-command="System diagnostics">DIAGNOSTICS</button>
-        <button data-command="Tell me a useful fact">QUICK FACT</button>
-        <button data-command="Help">HELP</button>
-      </div>
-
-      <div id="chatMessages"
-           class="chat-messages"
-           aria-live="polite">
-        <div class="message assistant-message">
-          <span class="message-label">J.A.R.V.I.S</span>
-          <div>
-            Systems initialized, Boss. Configure the AI connection
-            to begin an AI conversation.
-          </div>
-        </div>
-      </div>
-
-      <form id="chatForm" class="chat-form">
-        <button id="micButton"
-                class="icon-button"
-                type="button"
-                aria-label="Start voice input">🎙</button>
-
-        <input
-          id="messageInput"
-          type="text"
-          placeholder="Give me a command, Boss..."
-          autocomplete="off"
-          required
-        >
-
-        <button id="sendButton"
-                class="send-button"
-                type="submit">SEND</button>
-      </form>
-
-      <div class="button-row">
-        <button id="speakToggle" class="secondary-button" type="button">
-          VOICE: ON
-        </button>
-
-        <button id="clearChat" class="secondary-button" type="button">
-          CLEAR CHAT
-        </button>
-      </div>
-    </section>
-
-    <section class="panel command-panel">
-      <div class="section-title">
-        <h3>QUICK ACCESS</h3>
-        <span class="tag">LOCAL COMMANDS</span>
-      </div>
-
-      <div class="app-grid">
-        <button data-open="youtube"><span>▶</span>YOUTUBE</button>
-        <button data-open="google"><span>⌕</span>GOOGLE</button>
-        <button data-open="instagram"><span>◎</span>INSTAGRAM</button>
-        <button data-open="whatsapp"><span>◉</span>WHATSAPP</button>
-      </div>
-
-      <p class="muted">
-        These buttons open websites. Opening native Android apps
-        depends on your browser and device settings.
-      </p>
-    </section>
-
-    <section class="panel memory-panel">
-      <div class="section-title">
-        <h3>LONG-TERM MEMORY</h3>
-        <span class="tag">LOCAL STORAGE</span>
-      </div>
-
-      <form id="memoryForm">
-        <input
-          id="memoryInput"
-          type="text"
-          placeholder="Example: My favourite subject is computer science"
-          maxlength="300"
-          required
-        >
-
-        <button class="primary-button" type="submit">
-          SAVE MEMORY
-        </button>
-      </form>
-
-      <div id="memoryList" class="memory-list"></div>
-
-      <div class="button-row">
-        <button id="clearMemory" class="danger-button" type="button">
-          CLEAR MEMORY
-        </button>
-      </div>
-
-      <p class="muted">
-        Memories are stored on this browser. They are not
-        automatically sent to the AI unless you ask about them.
-      </p>
-    </section>
-
-    <section class="panel notes-panel">
-      <div class="section-title">
-        <h3>MISSION NOTES</h3>
-        <span class="tag">PERSONAL NOTES</span>
-      </div>
-
-      <form id="noteForm">
-        <input
-          id="noteInput"
-          type="text"
-          placeholder="Write a note or task..."
-          maxlength="500"
-          required
-        >
-
-        <button class="primary-button" type="submit">
-          SAVE NOTE
-        </button>
-      </form>
-
-      <div id="notesList" class="notes-list"></div>
-    </section>
-
-    <section class="panel diagnostics-panel">
-      <div class="section-title">
-        <h3>SYSTEM DIAGNOSTICS</h3>
-        <span class="tag">LIVE CHECKS</span>
-      </div>
-
-      <div id="diagnostics" class="diagnostics">
-        Loading diagnostics...
-      </div>
-
-      <button id="runDiagnostics"
-              class="secondary-button"
-              type="button">
-        RUN DIAGNOSTICS
-      </button>
-    </section>
-
-    <footer>
-      <p>J.A.R.V.I.S MOBILE EDITION</p>
-      <small>PERSONAL AI INTERFACE · BUILT FOR BOSS</small>
-    </footer>
-
-  </main>
-
-  <script src="script.js"></script>
 </body>
 </html>
