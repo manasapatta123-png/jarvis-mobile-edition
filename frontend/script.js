@@ -1,154 +1,161 @@
-// ===== J.A.R.V.I.S GEMINI 3.6 FLASH =====
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+};
 
-const chat = document.getElementById("chat");
-const input = document.getElementById("msg");
-const sendBtn = document.getElementById("send");
+export default {
+    async fetch(request, env) {
+        const url = new URL(request.url);
 
-let API_KEY = localStorage.getItem("jarvis_key");
-
-if (!API_KEY) {
-  API_KEY = prompt("Enter your Gemini API Key:");
-  if (API_KEY) {
-    API_KEY = API_KEY.trim();
-    localStorage.setItem("jarvis_key", API_KEY);
-  }
-}
-
-// Requested model
-const MODEL = "gemini-3.6-flash";
-
-// Display messages
-function add(text, who = "ai") {
-  const div = document.createElement("div");
-  div.className = "msg " + who;
-  div.innerText = text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-  return div;
-}
-
-// Connect to Gemini
-async function callGemini(promptText) {
-  if (!API_KEY) {
-    throw new Error("API key missing. Refresh the page and enter it.");
-  }
-
-  const url =
-    "https://generativelanguage.googleapis.com/v1beta/models/" +
-    MODEL +
-    ":generateContent?key=" +
-    encodeURIComponent(API_KEY);
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: promptText }]
+        if (request.method === "OPTIONS") {
+            return new Response(null, {
+                status: 204,
+                headers: corsHeaders
+            });
         }
-      ]
-    })
-  });
 
-  const data = await response.json();
+        if (url.pathname !== "/api/chat") {
+            return jsonResponse(
+                { error: "JARVIS API is running." },
+                200
+            );
+        }
 
-  if (!response.ok) {
-    throw new Error(
-      data.error?.message || "HTTP error " + response.status
-    );
-  }
+        if (request.method !== "POST") {
+            return jsonResponse(
+                { error: "Method not allowed." },
+                405
+            );
+        }
 
-  const reply = data.candidates?.[0]?.content?.parts
-    ?.map(part => part.text || "")
-    .join("");
+        if (!env.GEMINI_API_KEY) {
+            return jsonResponse(
+                { error: "Gemini API key Cloudflare secret లో configure చేయాలి." },
+                500
+            );
+        }
 
-  if (!reply) {
-    throw new Error("Gemini returned no response.");
-  }
+        try {
+            const body = await request.json();
+            const message = body.message;
+            const history = Array.isArray(body.history)
+                ? body.history
+                : [];
 
-  return reply;
+            if (!message || typeof message !== "string") {
+                return jsonResponse(
+                    { error: "Message పంపించు." },
+                    400
+                );
+            }
+
+            const contents = [];
+
+            for (const item of history.slice(-12)) {
+                if (
+                    !item ||
+                    !["user", "model"].includes(item.role) ||
+                    !Array.isArray(item.parts)
+                ) {
+                    continue;
+                }
+
+                const parts = item.parts
+                    .filter(part =>
+                        part && typeof part.text === "string"
+                    )
+                    .map(part => ({ text: part.text }));
+
+                if (parts.length > 0) {
+                    contents.push({
+                        role: item.role,
+                        parts
+                    });
+                }
+            }
+
+            // చివరి history message user message అయితే
+            // దాన్ని మళ్లీ జోడించకుండా చూసుకోవాలి.
+            const last = contents[contents.length - 1];
+
+            if (
+                !last ||
+                last.role !== "user" ||
+                last.parts[0]?.text !== message
+            ) {
+                contents.push({
+                    role: "user",
+                    parts: [{ text: message }]
+                });
+            }
+
+            const geminiResponse = await fetch(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-goog-api-key": env.GEMINI_API_KEY
+                    },
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{
+                                text: "You are J.A.R.V.I.S., a helpful personal AI assistant. Answer clearly, politely, and concisely. If the user speaks Telugu, reply in Telugu."
+                            }]
+                        },
+                        contents,
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 1000
+                        }
+                    })
+                }
+            );
+
+            const data = await geminiResponse.json();
+
+            if (!geminiResponse.ok) {
+                return jsonResponse(
+                    {
+                        error:
+                            data.error?.message ||
+                            "Gemini API request failed."
+                    },
+                    geminiResponse.status
+                );
+            }
+
+            const reply =
+                data.candidates?.[0]?.content?.parts
+                    ?.map(part => part.text || "")
+                    .join("")
+                    .trim();
+
+            if (!reply) {
+                return jsonResponse(
+                    { error: "Gemini నుంచి reply రాలేదు." },
+                    502
+                );
+            }
+
+            return jsonResponse({ reply }, 200);
+
+        } catch (error) {
+            return jsonResponse(
+                { error: error.message || "Internal server error." },
+                500
+            );
+        }
+    }
+};
+
+function jsonResponse(data, status = 200) {
+    return new Response(JSON.stringify(data), {
+        status,
+        headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json; charset=utf-8"
+        }
+    });
 }
-
-// Ask J.A.R.V.I.S
-async function askGemini(text) {
-  const loading = add("J.A.R.V.I.S: Thinking...", "ai");
-
-  try {
-    const reply = await callGemini(text);
-    loading.innerText = "J.A.R.V.I.S: " + reply;
-    speak(reply);
-  } catch (error) {
-    loading.innerText = "J.A.R.V.I.S ERROR: " + error.message;
-  }
-}
-
-// Send message
-function sendMessage() {
-  const text = input.value.trim();
-
-  if (!text) return;
-
-  add("YOU: " + text, "user");
-  input.value = "";
-  sendBtn.disabled = true;
-
-  askGemini(text).finally(() => {
-    sendBtn.disabled = false;
-  });
-}
-
-sendBtn.addEventListener("click", sendMessage);
-
-input.addEventListener("keydown", event => {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    sendMessage();
-  }
-});
-
-// Text-to-speech
-function speak(text) {
-  if (!("speechSynthesis" in window)) return;
-
-  speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  utterance.rate = 1;
-  speechSynthesis.speak(utterance);
-}
-
-// Optional microphone support
-const micBtn = document.getElementById("mic-btn");
-const SpeechRecognition =
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
-
-if (micBtn && SpeechRecognition) {
-  const recognition = new SpeechRecognition();
-  recognition.lang = "en-US";
-
-  micBtn.addEventListener("click", () => {
-    recognition.start();
-    micBtn.innerText = "LISTENING...";
-  });
-
-  recognition.onresult = event => {
-    input.value = event.results[0][0].transcript;
-    sendMessage();
-  };
-
-  recognition.onend = () => {
-    micBtn.innerText = "🎙️";
-  };
-
-  recognition.onerror = () => {
-    add("J.A.R.V.I.S: Microphone error. Check browser permission.", "ai");
-  };
-}
-
-add("J.A.R.V.I.S: Ready, Boss. Gemini connection initialized.", "ai");
