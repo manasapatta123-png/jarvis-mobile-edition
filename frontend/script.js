@@ -4,7 +4,7 @@ const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 const sendBtn = document.getElementById("send");
 
-const API_KEY = "PASTE_YOUR_NEW_API_KEY_HERE";
+const API_KEY = "AQ.Ab8RN6IN40rsjM0Q5aS-4VX1FUXtTlKcaJwPyXDr9vBhcNYD8w";
 
 // Use a model ID that is actually available to your API key.
 const MODEL = "gemini-3.6-flash";
