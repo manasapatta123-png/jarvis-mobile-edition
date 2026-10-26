@@ -1,89 +1,31 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#02070d">
-<title>J.A.R.V.I.S | Mobile Edition</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>J.A.R.V.I.S</title>
 <link rel="stylesheet" href="style.css">
-
-</head><body><header>
-    <h1>J.A.R.V.I.S</h1>
-    <p>MOBILE EDITION</p>
-</header>
-
-<main>
-
-    <!-- AI Core Animation -->
-    <section class="core-section">
-        <div class="core">
-            <div class="ring r1"></div>
-            <div class="ring r2"></div>
-            <div class="center"></div>
-        </div>
-
-        <p class="core-text">CORE ACTIVE</p>
-    </section>
-
-    <!-- System Status -->
-    <section class="status">
-        <h2>SYSTEM STATUS</h2>
-
-        <div class="row">
-            <span>AI CORE</span>
-            <b class="off" id="aiStatus">○ WAITING</b>
-        </div>
-
-        <div class="row">
-            <span>NETWORK</span>
-            <b class="off" id="networkStatus">○ CHECKING</b>
-        </div>
-
-        <div class="row">
-            <span>VOICE</span>
-            <b class="off" id="voiceStatus">○ LOCKED</b>
-        </div>
-
-        <div class="row">
-            <span>MEMORY</span>
-            <b class="off" id="memoryStatus">○ LOCKED</b>
-        </div>
-    </section>
-
-    <!-- Chat Messages -->
-    <section
-        class="chat"
-        id="chat"
-        role="log"
-        aria-live="polite"
-        aria-label="JARVIS conversation"
-    >
-        <div class="message jarvis-message">
-            J.A.R.V.I.S: Welcome, Boss. Systems initializing...
-        </div>
-    </section>
-
-    <!-- User Input -->
-    <form class="input-area" id="chatForm">
-        <input
-            type="text"
-            id="msg"
-            placeholder="Ask J.A.R.V.I.S..."
-            autocomplete="off"
-            aria-label="Enter your message"
-            required
-        >
-
-        <button type="submit" id="send">SEND</button>
-    </form>
-
-</main>
-
-<footer>
-    <p>J.A.R.V.I.S MOBILE EDITION</p>
-    <p>PERSONAL AI INTERFACE</p>
-</footer>
-
-<script src="script.js" defer></script>
-
+</head>
+<body>
+ <header><h1>J.A.R.V.I.S</h1><p>MOBILE EDITION</p></header>
+ <div class="core">
+ <div class="ring r1"></div>
+ <div class="ring r2"></div>
+ <div class="center"></div>
+ </div>
+ <p class="core-text">CORE ACTIVE</p>
+ <div class="status">
+ <h2>SYSTEM STATUS</h2>
+ <div class="row"><span>AI CORE</span><b class="on">● ONLINE</b></div>
+ <div class="row"><span>NETWORK</span><b class="on">● ONLINE</b></div>
+ <div class="row"><span>VOICE</span><b class="off">○ LOCKED</b></div>
+ <div class="row"><span>MEMORY</span><b class="off">○ LOCKED</b></div>
+ </div>
+ <div class="chat" id="chat"></div>
+ <div class="input-area">
+ <input id="msg" placeholder="Ask J.A.R.V.I.S...">
+ <button id="send">SEND</button>
+ </div>
+ <script src="script.js"></script>
 </body>
 </html>
