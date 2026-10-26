@@ -1,62 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>J.A.R.V.I.S | Mobile Edition</title>
-
-  <link rel="stylesheet" href="./style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S AI</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-  <header>
-    <h1>J.A.R.V.I.S</h1>
-    <p>MOBILE EDITION</p>
-  </header>
+    <header>
+        <h1>J.A.R.V.I.S</h1>
+        <p>PERSONAL AI ASSISTANT</p>
+    </header>
 
-  <div class="core">
-    <div class="ring r1"></div>
-    <div class="ring r2"></div>
-    <div class="center"></div>
-  </div>
-
-  <p class="core-text">CORE ACTIVE</p>
-
-  <div class="status">
-    <h2>SYSTEM STATUS</h2>
-
-    <div class="row">
-      <span>AI CORE</span>
-      <b class="on">ONLINE</b>
+    <div class="core">
+        <div class="ring ring1"></div>
+        <div class="ring ring2"></div>
+        <div class="center"></div>
     </div>
 
-    <div class="row">
-      <span>NETWORK</span>
-      <b class="on">ONLINE</b>
+    <h2 id="status">SYSTEM READY</h2>
+
+    <div class="chat" id="chat">
+        <div class="message bot">
+            Hello! I am J.A.R.V.I.S. How can I help you?
+        </div>
     </div>
 
-    <div class="row">
-      <span>VOICE</span>
-      <b class="off">LOCKED</b>
+    <div class="input-area">
+        <input
+            type="text"
+            id="msg"
+            placeholder="Ask JARVIS something..."
+        >
+
+        <button id="send">SEND</button>
+        <button id="mic-btn">🎙️</button>
+        <button id="cam-btn">📷</button>
+
+        <input
+            type="file"
+            id="img-input"
+            accept="image/*"
+            capture="environment"
+            hidden
+        >
     </div>
 
-    <div class="row">
-      <span>MEMORY</span>
-      <b class="off">LOCKED</b>
-    </div>
-  </div>
+    <button id="clear-btn">CLEAR MEMORY</button>
 
-  <div class="chat" id="chat">
-    <div class="msg">J.A.R.V.I.S: Systems online. How may I assist you, Boss?</div>
-  </div>
-
-  <div class="input-area">
-    <input id="msg" type="text" placeholder="Ask J.A.R.V.I.S...">
-    <button id="send" type="button">SEND</button>
-  </div>
-
-  <script src="./script.js"></script>
-
+    <script src="script.js"></script>
 </body>
 </html>
